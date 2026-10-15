@@ -187,6 +187,10 @@ export default class Game {
         break;
       case 'pause':
         if (this.input.pressed('Escape')) this.state = 'play';
+        if (this.input.pressed('KeyQ')) {
+          this.saveBest(); // abandoning the run, but keep the record
+          this.state = 'title'; this.sfx('confirm');
+        }
         break;
       case 'clear':
         if (this.input.pressed('Enter')) this.nextLevel();
