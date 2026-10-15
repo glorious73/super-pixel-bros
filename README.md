@@ -42,6 +42,7 @@ need `http://`, not `file://`.)
 | M | Mute / unmute |
 | Esc | Pause |
 | R | Retry (lose a life, instant) |
+| F | Toggle fit-window / pixel-perfect scaling |
 
 ## Project layout
 

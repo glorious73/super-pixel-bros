@@ -66,11 +66,13 @@ and has caught real soft-locks before (a pipe taller than the player's jump).
   adding enemies, register them in `loadLevel` so night extras keep working.
 - Audio can only start after a user gesture; `audio.unlock()` is called on
   first keypress/pointerdown in `main.js`.
-- Best score, mute and day/night prefs persist via `localStorage`
-  (`pixelbros_best`, `pixelbros_mute`, `pixelbros_night`).
+- Best score, mute, day/night and scaling prefs persist via `localStorage`
+  (`pixelbros_best`, `pixelbros_mute`, `pixelbros_night`, `pixelbros_fit`).
 - The canvas renders at 480×272 and is scaled by CSS with
-  `image-rendering: pixelated` — never enlarge the internal resolution
-  to "fix" blurriness; integer scaling is handled in `main.js`.
+  `image-rendering: pixelated`. `resize()` in `main.js` fills the window at a
+  fractional scale by default (fit mode); **F** toggles pixel-perfect integer
+  scaling (floor factor, falls back to fit below 1). Never enlarge the
+  internal resolution to "fix" blurriness.
 
 ## Conventions
 

@@ -27,7 +27,7 @@ export function drawTitle(ctx, g) {
     centerText(ctx, 'PRESS  ENTER  TO  START', 240, 168, '#ffffff', 12);
   }
   centerText(ctx, 'ARROWS/WASD MOVE    SPACE JUMP', 240, 196, '#e8e8f8', 9);
-  centerText(ctx, 'N DAY / NIGHT     M MUTE     R RETRY', 240, 210, '#e8e8f8', 9);
+  centerText(ctx, 'N DAY/NIGHT  M MUTE  R RETRY  F SCALE', 240, 210, '#e8e8f8', 9);
   centerText(ctx, `BEST ${String(g.best).padStart(6, '0')}`, 240, 236, '#ffd83d', 10);
   centerText(ctx, '3 HEROES   5 WORLDS   DAY OR NIGHT', 240, 252, '#c8c8e0', 9);
 }
