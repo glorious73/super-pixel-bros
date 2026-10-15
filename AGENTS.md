@@ -25,6 +25,9 @@ for f in js/*.js; do node --input-type=module --check < "$f" || echo "FAIL $f"; 
 # jump-range physics — run it after ANY edit to js/levels.js
 # (see /tmp/opencode/smoke.mjs pattern; levels.js has no browser deps,
 #  so it runs directly under Node)
+
+# palette contrast linter — run after ANY edit to js/theme.js
+node tools/check-palette.mjs
 ```
 
 There is no test suite and no CI; the reachability check is the closest thing
@@ -40,7 +43,7 @@ and has caught real soft-locks before (a pipe taller than the player's jump).
 | `js/entities.js` | `Player` + `CHARACTERS` stat table, enemy classes, tile collision (`moveX`/`moveY`) |
 | `js/renderer.js` | tile grid + entity + HUD drawing |
 | `js/sprites.js` | procedural pixel-art drawing (rects only) |
-| `js/theme.js` | per-level day/night palettes, color lerp, parallax backdrop |
+| `js/theme.js` | per-level day/night palettes, color lerp, parallax backdrop. Palettes carry `spike`/`pole` colors so those objects harmonize per theme and mode |
 | `js/ui.js` | menu screens |
 | `js/audio.js` | Web Audio synth: SFX + per-level looping melodies (night = octave down, slower, triangle) |
 | `js/input.js` | keyboard state + edge-triggered `pressed()` (cleared each rAF frame) |
