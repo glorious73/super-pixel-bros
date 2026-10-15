@@ -18,10 +18,15 @@ need `http://`, not `file://`.)
 
 - **5 levels** with a rising difficulty curve: Sunny Plains, Rolling Hills,
   Dark Caves, Sky Heights and Lava Fortress.
-- **3 playable heroes** with different stats:
+- **5 playable heroes** with different stats:
   - **Rosso** — balanced, survives one extra hit per life
   - **Bolt** — fastest runner, but dies to a single hit
   - **Aqua** — mega jump and floaty falls
+  - **Faris (فارس)** — armored knight in a keffiyeh; slow but survives 3 hits
+  - **Sahm (سهم)** — the arrow; extreme speed with a low, slippery jump
+- **Bilingual — English & Arabic** (press `L` anytime): full UI translation,
+  proper Arabic text shaping, RTL footer, and Arabic hero names. English is
+  the default; the choice is remembered.
 - **Day / Night mode** (press `N` anytime): night darkens the world and
   shifts the music to a slower minor-key variation, spawns ~50% more enemies
   that walk faster — but coins are worth **2× score**.
@@ -43,6 +48,7 @@ need `http://`, not `file://`.)
 | Esc | Pause |
 | R | Retry (lose a life, instant) |
 | F | Toggle fit-window / pixel-perfect scaling |
+| L | Toggle language (English / العربية) |
 
 ## Project layout
 
@@ -51,6 +57,7 @@ index.html          page shell
 css/style.css       page styling
 js/main.js          canvas setup + fixed-timestep loop
 js/game.js          state machine, physics interactions, scoring
+js/i18n.js          English/Arabic string tables, language toggle, RTL
 js/levels.js        the 5 tilemap levels + level builder
 js/entities.js      player characters, enemies, collision helpers
 js/renderer.js      tile grid, entities, HUD
