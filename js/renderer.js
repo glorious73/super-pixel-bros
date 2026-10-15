@@ -138,7 +138,7 @@ function drawTile(ctx, ch, tx, ty, g, pal) {
       drawCoin(ctx, x, y, g.t);
       break;
     case '^': {
-      ctx.fillStyle = '#c8ccd8';
+      ctx.fillStyle = pal.spike;
       for (let i = 0; i < 3; i++) {
         const sx = x + i * 6;
         ctx.beginPath();
@@ -176,7 +176,7 @@ function drawTile(ctx, ch, tx, ty, g, pal) {
       break;
     }
     case 'F':
-      drawFlag(ctx, x, y + T, g.t);
+      drawFlag(ctx, x, y + T, g.t, pal.pole);
       break;
   }
 }

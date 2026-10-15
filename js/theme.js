@@ -1,4 +1,6 @@
 // Color themes per level with day + night palettes.
+// Run tools/check-palette.mjs after edits — it enforces the brightness
+// and contrast rules documented in AGENTS.md.
 
 function hex(h) {
   const n = parseInt(h.slice(1), 16);
@@ -12,47 +14,57 @@ export function lerpColor(a, b, t) {
   return toHex([0, 1, 2].map((i) => A[i] + (B[i] - A[i]) * t));
 }
 
-// keys: sky1 sky2 sun moon hill1 hill2 ground groundTop brick block pipe plat deco
+// keys: sky1 sky2 sun moon hill1 hill2 ground groundTop brick block pipe plat deco spike pole
 export const THEMES = [
   { // 0 Sunny Plains
     day: { sky1: '#79c7ff', sky2: '#d9f2ff', sun: '#ffe14d', moon: '#e8ecff',
       hill1: '#4fbf5e', hill2: '#37995a', ground: '#a56a34', groundTop: '#5ec93f',
-      brick: '#c8702a', block: '#f8b400', pipe: '#2fa52f', plat: '#b9b9c9', deco: '#3fae54' },
+      brick: '#c8702a', block: '#f8b400', pipe: '#2fa52f', plat: '#b9b9c9', deco: '#3fae54',
+      spike: '#d8dce6', pole: '#d8dce6' },
     night: { sky1: '#0b1030', sky2: '#2a3763', sun: '#ffe14d', moon: '#f2f2d8',
       hill1: '#1d4a3e', hill2: '#163a34', ground: '#4c3a56', groundTop: '#2f6653',
-      brick: '#5c4468', block: '#b98d2e', pipe: '#1d6b45', plat: '#5a5a75', deco: '#1e4e46' },
+      brick: '#5c4468', block: '#b98d2e', pipe: '#1d6b45', plat: '#5a5a75', deco: '#1e4e46',
+      spike: '#aab0c4', pole: '#aab0c4' },
   },
   { // 1 Rolling Hills
     day: { sky1: '#63c3e8', sky2: '#d6f6f8', sun: '#ffd93d', moon: '#e8ecff',
       hill1: '#5ad168', hill2: '#2f9e55', ground: '#9a6a34', groundTop: '#6fd44f',
-      brick: '#c07830', block: '#f8b400', pipe: '#27a04a', plat: '#c2c2d2', deco: '#48b862' },
+      brick: '#c07830', block: '#f8b400', pipe: '#27a04a', plat: '#c2c2d2', deco: '#48b862',
+      spike: '#d8dce6', pole: '#d8dce6' },
     night: { sky1: '#0a1430', sky2: '#28406a', sun: '#ffd93d', moon: '#f2f2d8',
       hill1: '#1e5448', hill2: '#143e38', ground: '#4a4058', groundTop: '#336b52',
-      brick: '#56486c', block: '#b08a30', pipe: '#1d6650', plat: '#585c78', deco: '#20524a' },
+      brick: '#56486c', block: '#b08a30', pipe: '#1d6650', plat: '#585c78', deco: '#20524a',
+      spike: '#a6acc0', pole: '#a6acc0' },
   },
-  { // 2 Dark Caves
-    day: { sky1: '#1b1430', sky2: '#3a2c52', sun: '#ffe97a', moon: '#dfe2ff',
-      hill1: '#2c2144', hill2: '#241a38', ground: '#6b5878', groundTop: '#8a7696',
-      brick: '#7a5f8c', block: '#e8a83a', pipe: '#3e9464', plat: '#9a8fae', deco: '#3a2c5a' },
-    night: { sky1: '#08060f', sky2: '#181228', sun: '#ffe97a', moon: '#cfd4f0',
-      hill1: '#141020', hill2: '#100c1a', ground: '#3e3350', groundTop: '#574a68',
-      brick: '#4a3a5c', block: '#b07f2e', pipe: '#26604a', plat: '#5e5572', deco: '#221a36' },
+  { // 2 Dark Caves — bright lavender cavern by day, deep purple by night
+    day: { sky1: '#584675', sky2: '#8b78a8', sun: '#ffe97a', moon: '#dfe2ff',
+      hill1: '#6f5b92', hill2: '#5d4b80', ground: '#a591bd', groundTop: '#d3c2ea',
+      brick: '#bb9fd0', block: '#e8a83a', pipe: '#4cae76', plat: '#cfc4e0', deco: '#7b6698',
+      spike: '#e0d8f0', pole: '#efe8ff' },
+    night: { sky1: '#241b3e', sky2: '#3b2f5e', sun: '#ffe97a', moon: '#cfd4f0',
+      hill1: '#332a54', hill2: '#2b2248', ground: '#6d5e92', groundTop: '#9484b8',
+      brick: '#7d69a4', block: '#cf9c40', pipe: '#357f62', plat: '#8f84ac', deco: '#4b3d70',
+      spike: '#b8a8d0', pole: '#cfc2e8' },
   },
-  { // 3 Sky Heights
+  { // 3 Sky Heights — mint surfaces, saturated blue hills (never near cloud-white)
     day: { sky1: '#4fb8ff', sky2: '#eafaff', sun: '#ffe14d', moon: '#f4f6ff',
-      hill1: '#bfe9ff', hill2: '#a2d9f7', ground: '#e8eef8', groundTop: '#ffffff',
-      brick: '#cdd8ea', block: '#ffc832', pipe: '#58c0e8', plat: '#ffffff', deco: '#ffffff' },
+      hill1: '#7dbdf0', hill2: '#5aa5e6', ground: '#3fc998', groundTop: '#a9f0d4',
+      brick: '#2eae84', block: '#ffc832', pipe: '#2898d8', plat: '#7edcc2', deco: '#a9d2f4',
+      spike: '#dce8f8', pole: '#f4f8ff' },
     night: { sky1: '#060a26', sky2: '#1c2a56', sun: '#ffe14d', moon: '#f2f2d8',
       hill1: '#1a2448', hill2: '#141c3a', ground: '#3c4468', groundTop: '#556090',
-      brick: '#4a5278', block: '#c09a38', pipe: '#2a5a80', plat: '#6a7298', deco: '#2a3358' },
+      brick: '#4a5278', block: '#c09a38', pipe: '#2a5a80', plat: '#6a7298', deco: '#2a3358',
+      spike: '#9aa4c8', pole: '#b8c0dc' },
   },
-  { // 4 Lava Fortress
-    day: { sky1: '#571c14', sky2: '#c05a28', sun: '#ffb830', moon: '#e8c8b0',
-      hill1: '#3a2024', hill2: '#2c181c', ground: '#5c4c50', groundTop: '#8c4634',
-      brick: '#6e565e', block: '#e8922a', pipe: '#7a4a4a', plat: '#9aa0b0', deco: '#46292c' },
-    night: { sky1: '#150608', sky2: '#4a1a14', sun: '#ffb830', moon: '#e0d0c8',
-      hill1: '#1c0e12', hill2: '#150a0e', ground: '#382c34', groundTop: '#5e3038',
-      brick: '#46363e', block: '#b06e24', pipe: '#4e3238', plat: '#5e5e70', deco: '#2a1a1e' },
+  { // 4 Lava Fortress — warm stone day, glowing horizon night
+    day: { sky1: '#571c14', sky2: '#b04e1e', sun: '#ffb830', moon: '#e8c8b0',
+      hill1: '#6a3f3a', hill2: '#55322f', ground: '#9a7d6e', groundTop: '#c05f3a',
+      brick: '#a07a72', block: '#e8922a', pipe: '#96624f', plat: '#c4b29a', deco: '#7c5348',
+      spike: '#f0d8c8', pole: '#f0e2d0' },
+    night: { sky1: '#2f1410', sky2: '#6e2c1c', sun: '#ffb830', moon: '#e0d0c8',
+      hill1: '#402624', hill2: '#331d1c', ground: '#5c4a48', groundTop: '#8a4536',
+      brick: '#6e5250', block: '#d09238', pipe: '#5e3a36', plat: '#8a7a72', deco: '#55382f',
+      spike: '#c8a890', pole: '#d8c0aa' },
   },
 ];
 

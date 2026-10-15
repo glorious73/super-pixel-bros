@@ -173,9 +173,9 @@ export function drawCoin(ctx, x, y, t) {
 }
 
 // 16x16 flag tile (base) — pole drawn upward
-export function drawFlag(ctx, x, y, t) {
+export function drawFlag(ctx, x, y, t, poleCol = '#c8c8d4') {
   const px = x + 7;
-  ctx.fillStyle = '#c8c8d4';
+  ctx.fillStyle = poleCol;
   ctx.fillRect(px, y - 80, 2, 82);
   ctx.fillStyle = '#f8d832';
   ctx.beginPath(); ctx.arc(px + 1, y - 80, 4, 0, 7); ctx.fill();
