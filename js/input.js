@@ -19,6 +19,12 @@ const Input = {
   isDown: (code) => held.has(code),
   pressed: (code) => pressedSet.has(code),
   anyPressed: () => pressedSet.size > 0,
+  // virtual keys from touch controls (same edge-trigger semantics as keyboard)
+  press(code) {
+    if (!held.has(code)) pressedSet.add(code);
+    held.add(code);
+  },
+  release(code) { held.delete(code); },
   // treat a mouse click/tap on the canvas as Enter
   touchConfirm() {
     if (!held.has('Enter')) pressedSet.add('Enter');

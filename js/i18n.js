@@ -7,10 +7,14 @@ const EN = {
   'app.title': 'SUPER PIXEL BROS',
   'press_enter': 'PRESS  ENTER  TO  START',
   'controls.move': 'ARROWS/WASD MOVE    SPACE JUMP',
-  'controls.actions': 'N DAY/NIGHT  M MUTE  R RETRY  L LANG  F SCALE',
+  'controls.actions': 'N DAY/NIGHT  M MUTE  R RETRY  L LANG  F SCALE  T TOUCH',
   'best': 'BEST {n}',
   'cast_line': '5 HEROES   5 WORLDS   DAY OR NIGHT',
   'choose_hero': 'CHOOSE YOUR HERO',
+  'map.title': 'ADVENTURE MAP',
+  'map.hint': '← → SELECT   ENTER PLAY   Q TITLE',
+  'map.node': 'STAGE {n}',
+  'rotate': 'ROTATE TO LANDSCAPE',
   'select_hint': '←  →  SELECT          ENTER  GO!',
   'spd': 'SPD',
   'jmp': 'JMP',
@@ -60,10 +64,14 @@ const AR = {
   'app.title': 'SUPER PIXEL BROS',
   'press_enter': 'اضغط  ENTER  للبدء',
   'controls.move': 'تحرّك بالأسهم/WASD    اقفز بـ SPACE',
-  'controls.actions': 'N ليل/نهار  M كتم  R إعادة  L لغة  F تكبير',
+  'controls.actions': 'N ليل/نهار  M كتم  R إعادة  L لغة  F تكبير  T لمس',
   'best': 'الأفضل {n}',
   'cast_line': '5 أبطال   5 عوالم   نهار أو ليل',
   'choose_hero': 'اختر  بطلك',
+  'map.title': 'خريطة  المغامرة',
+  'map.hint': '← → للاختيار   ENTER للعب   Q للخروج',
+  'map.node': 'المرحلة {n}',
+  'rotate': 'أدر الجهاز للوضع الأفقي',
   'select_hint': '← → للاختيار          ENTER للبدء',
   'spd': 'سرعة',
   'jmp': 'قفز',
@@ -119,6 +127,8 @@ function applyHtml() {
   root.dir = lang === 'ar' ? 'rtl' : 'ltr';
   const f = document.getElementById('footer');
   if (f) f.textContent = t('footer');
+  const r = document.getElementById('rotate');
+  if (r) r.textContent = t('rotate');
 }
 
 export function t(key, params) {

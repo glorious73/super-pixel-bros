@@ -1,4 +1,4 @@
-// Bootstrap: canvas, integer scaling, fixed-timestep loop.
+// Bootstrap: canvas, integer scaling, fixed-timestep loop, touch controls.
 import Game from './game.js';
 import Input from './input.js';
 import audio from './audio.js';
@@ -37,6 +37,44 @@ addEventListener('keydown', (e) => {
   }
 });
 
+// ------------------------------------------------------------ touch controls
+// On-screen gamepad: ◀ ▶ + jump, pause button, and a title button that
+// appears when the pause/map states offer it (via body[data-state]).
+// Auto-enabled on coarse-pointer devices; T toggles and persists.
+const isTouchDevice = matchMedia('(hover: none) and (pointer: coarse)').matches;
+let touchOn = localStorage.getItem('pixelbros_touch');
+if (touchOn === null) touchOn = isTouchDevice ? '1' : '0';
+applyTouch(touchOn === '1');
+
+function applyTouch(on) {
+  document.body.classList.toggle('touch', on);
+  localStorage.setItem('pixelbros_touch', on ? '1' : '0');
+}
+
+addEventListener('keydown', (e) => {
+  if (e.code === 'KeyT' && !e.repeat) applyTouch(!document.body.classList.contains('touch'));
+});
+
+function bindHold(id, code) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const down = (e) => { e.preventDefault(); Input.press(code); el.blur(); };
+  const up = (e) => { e.preventDefault(); Input.release(code); };
+  el.addEventListener('pointerdown', down);
+  el.addEventListener('pointerup', up);
+  el.addEventListener('pointercancel', up);
+  el.addEventListener('pointerleave', up);
+}
+bindHold('btnL', 'ArrowLeft');
+bindHold('btnR', 'ArrowRight');
+bindHold('btnJump', 'Space');
+bindHold('btnPause', 'Escape');
+bindHold('btnTitle', 'KeyQ');
+
+addEventListener('contextmenu', (e) => {
+  if (document.body.classList.contains('touch')) e.preventDefault();
+});
+
 const game = new Game();
 
 const unlock = () => audio.unlock();
@@ -49,6 +87,7 @@ canvas.addEventListener('pointerdown', () => {
 const STEP = 1000 / 60;
 let last = performance.now();
 let acc = 0;
+let lastState = '';
 
 function loop(now) {
   requestAnimationFrame(loop);
@@ -59,6 +98,10 @@ function loop(now) {
     acc -= STEP;
   }
   game.render(ctx);
+  if (game.state !== lastState) {
+    lastState = game.state;
+    document.body.dataset.state = game.state; // CSS shows pause/map buttons
+  }
   Input.endFrame();
 }
 requestAnimationFrame(loop);

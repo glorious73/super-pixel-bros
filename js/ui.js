@@ -1,8 +1,9 @@
 // Menu screens: title, character select (carousel), clear, game over, victory.
 import { palette, drawBackdrop } from './theme.js';
-import { drawHero } from './sprites.js';
+import { drawHero, drawTrophy } from './sprites.js';
 import { text } from './renderer.js';
 import { CHARACTERS } from './entities.js';
+import { NAME_KEYS } from './levels.js';
 import { t, isArabic, otherLang } from './i18n.js';
 
 function menuBg(ctx, g) {
@@ -140,6 +141,107 @@ function statBar(ctx, label, val, x, y, col) {
   ctx.fillRect(x + 28, y, Math.max(4, Math.min(70, val * 70)), 6);
 }
 
+// ---------------------------------------------------------------- adv. map
+// Winding path from bottom-left to top-right; hero walks node to node.
+const MAP_NODES = [[52, 198], [148, 168], [240, 146], [332, 112], [414, 82]];
+const MAP_COLS = ['#5aff8a', '#ffd83d', '#a8b8ff', '#5ab0ff', '#ff8a4e'];
+
+export function drawMap(ctx, g) {
+  menuBg(ctx, g);
+  ctx.textAlign = 'center';
+  text(ctx, t('map.title'), 240, 24, '#ffd83d', 14);
+  ctx.textAlign = 'left';
+  text(ctx, t('score', { n: g.score }), 8, 14, '#ffffff', 9);
+  ctx.textAlign = 'right';
+  text(ctx, g.night ? t('hud.night') : t('hud.day'), 472, 14,
+    g.night ? '#a8b8ff' : '#ffe14d', 9);
+  ctx.textAlign = 'center';
+
+  // dashed path
+  ctx.fillStyle = 'rgba(255,255,255,0.30)';
+  for (let i = 0; i < MAP_NODES.length - 1; i++) {
+    const [x0, y0] = MAP_NODES[i];
+    const [x1, y1] = MAP_NODES[i + 1];
+    const n = Math.max(2, Math.floor(Math.hypot(x1 - x0, y1 - y0) / 12));
+    for (let k = 1; k < n; k++) {
+      ctx.fillRect(x0 + ((x1 - x0) * k) / n, y0 + ((y1 - y0) * k) / n, 3, 3);
+    }
+  }
+
+  // castle above the final node
+  ctx.fillStyle = '#8a90ae';
+  ctx.fillRect(402, 42, 24, 18);
+  ctx.fillRect(400, 36, 5, 8);
+  ctx.fillRect(423, 36, 5, 8);
+  ctx.fillRect(410, 38, 8, 6);
+  ctx.fillStyle = '#3a3a52';
+  ctx.fillRect(410, 50, 8, 10);              // door
+
+  // stage nodes
+  for (let i = 0; i < MAP_NODES.length; i++) {
+    const [x, y] = MAP_NODES[i];
+    const open = i <= g.node || i === g.cursor;
+    const cleared = !!g.cleared[i];
+    if (i === g.node && !g.mapWalk) {        // frontier pulse
+      ctx.beginPath();
+      ctx.arc(x, y, 12 + Math.sin(g.t * 0.12) * 2, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ffd83d';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(x, y, 9, 0, Math.PI * 2);
+    ctx.fillStyle = open ? MAP_COLS[i] : 'rgba(255,255,255,0.12)';
+    ctx.fill();
+    ctx.strokeStyle = open ? '#ffffff' : 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    text(ctx, String(i + 1), x, y + 4, open ? '#1c1c28' : '#77779a', 11);
+    if (cleared) {                            // mini victory flag
+      ctx.fillStyle = '#d8d8e4';
+      ctx.fillRect(x + 8, y - 14, 1, 14);
+      ctx.fillStyle = '#5aff8a';
+      ctx.fillRect(x + 9, y - 14, 6, 4);
+    }
+    text(ctx, t(NAME_KEYS[i]), x, y + 22, open ? '#ffffff' : '#8888a8', 7);
+  }
+
+  // hero: standing on frontier node, or walking along the path
+  let hx, hy, moving = false;
+  if (g.mapWalk) {
+    const e = g.mapWalk.t * g.mapWalk.t * (3 - 2 * g.mapWalk.t); // smoothstep
+    const [x0, y0] = MAP_NODES[g.mapWalk.from];
+    const [x1, y1] = MAP_NODES[g.mapWalk.to];
+    hx = x0 + (x1 - x0) * e;
+    hy = y0 + (y1 - y0) * e;
+    moving = true;
+  } else {
+    [hx, hy] = MAP_NODES[g.node];
+  }
+  ctx.save();
+  ctx.translate(hx, hy - 2);
+  ctx.scale(2, 2);
+  drawHero(ctx, g.char, -6, -15, 1, moving, true, g.t);
+  ctx.restore();
+
+  // selection cursor (idle only)
+  if (!g.mapWalk) {
+    const [cx, cy] = MAP_NODES[g.cursor];
+    const bob = Math.abs(Math.sin(g.t * 0.15)) * 4;
+    ctx.fillStyle = '#ffd83d';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 16 - bob);
+    ctx.lineTo(cx - 5, cy - 23 - bob);
+    ctx.lineTo(cx + 5, cy - 23 - bob);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  if (Math.floor(g.t / 24) % 2) {
+    text(ctx, t('map.hint'), 240, 262, '#ffffff', 9);
+  }
+}
+
 // ---------------------------------------------------------------- results
 function dim(ctx, a) {
   ctx.fillStyle = `rgba(0,0,8,${a})`;
@@ -177,12 +279,19 @@ export function drawVictory(ctx, g) {
     ctx.fillRect(x, y, 3, 3);
   }
   ctx.textAlign = 'center';
-  text(ctx, t('thanks'), 240, 84, '#ffd83d', 28);
-  text(ctx, t('kingdom_saved'), 240, 116, '#ffffff', 13);
-  drawHero(ctx, g.char, 234, 132, 1, true, true, tme);
-  text(ctx, t('final_score', { n: g.score }), 240, 178, '#ffffff', 14);
-  text(ctx, t('best', { n: String(g.best).padStart(6, '0') }), 240, 196, '#ffd83d', 10);
-  text(ctx, `${t('coins', { n: g.coins })}      ${t('mode', { m: g.night ? t('hud.night') : t('hud.day') })}`, 240, 212, '#c8c8e0', 10);
+  text(ctx, t('thanks'), 240, 56, '#ffd83d', 28);
+  text(ctx, t('kingdom_saved'), 240, 76, '#ffffff', 13);
+  // hero holding the trophy overhead
+  const bob = Math.sin(tme * 0.08) * 2;
+  drawTrophy(ctx, 234, 114 + bob, tme);
+  ctx.save();
+  ctx.translate(240, 130 + bob * 0.5);
+  ctx.scale(2, 2);
+  drawHero(ctx, g.char, -6, 0, 1, false, true, tme);
+  ctx.restore();
+  text(ctx, t('final_score', { n: g.score }), 240, 186, '#ffffff', 14);
+  text(ctx, t('best', { n: String(g.best).padStart(6, '0') }), 240, 202, '#ffd83d', 10);
+  text(ctx, `${t('coins', { n: g.coins })}      ${t('mode', { m: g.night ? t('hud.night') : t('hud.day') })}`, 240, 216, '#c8c8e0', 10);
   if (Math.floor(tme / 24) % 2) {
     text(ctx, t('title_back'), 240, 244, '#ffffff', 10);
   }

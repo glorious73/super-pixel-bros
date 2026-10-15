@@ -230,3 +230,5 @@ export function parseLevel(idx) {
 }
 
 export const LEVEL_COUNT = LEVELS.length;
+// stage name keys for screens that show all stages at once (adventure map)
+export const NAME_KEYS = LEVELS.map((l) => l.nameKey || 'level.plains');

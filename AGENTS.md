@@ -47,7 +47,7 @@ and has caught real soft-locks before (a pipe taller than the player's jump).
 | File | Responsibility |
 |---|---|
 | `js/main.js` | canvas setup, integer-pixel scaling, fixed-timestep loop |
-| `js/game.js` | state machine (`title/select/play/pause/clear/gameover/victory`), world simulation, collisions, scoring. Implements the "world" facade entities use (`getTile`, `sfx`, `bumpBlock`, `shake`, `input`) |
+| `js/game.js` | state machine (`title/select/map/play/pause/clear/gameover/victory`), world simulation, collisions, scoring. Implements the "world" facade entities use (`getTile`, `sfx`, `bumpBlock`, `shake`, `input`) |
 | `js/i18n.js` | English + Arabic string tables, `t()` lookup, `L` language toggle, RTL/`<html lang>` handling; persisted via `pixelbros_lang` |
 | `js/levels.js` | tile chars, `Builder` helpers, the 5 levels, `parseLevel()` |
 | `js/entities.js` | `Player` + `CHARACTERS` stat table, enemy classes, tile collision (`moveX`/`moveY`) |
@@ -60,6 +60,16 @@ and has caught real soft-locks before (a pipe taller than the player's jump).
 
 ## Key facts & gotchas
 
+- **Touch controls:** on-screen ◀ ▶ / jump / pause buttons overlay the canvas
+  (DOM buttons in `index.html`, styled in `style.css`, wired in `main.js` via
+  `Input.press/release` — same edge triggers as keyboard). Auto-enabled on
+  coarse-pointer devices; `T` toggles (`localStorage.pixelbros_touch`).
+  `body[data-state]` mirrors the game state for CSS (the title button only
+  shows on pause/map). Portrait shows a rotate-to-landscape hint.
+- **Adventure map** (`map` state in `game.js`, `drawMap` in `ui.js`): hero
+  walks a 5-node path between stages; clearing the frontier stage walks the
+  hero to the next node (Enter skips the walk), cleared stages are replayable
+  via the cursor, `Q` quits to title. Final stage → trophy victory screen.
 - **Fixed timestep 60 Hz** (`STEP = 1000/60`); all physics values are
   px/frame, not px/second. Jump reach varies per hero — design for the
   **worst** case: Sahm climbs only ≈3.5 tiles (low jump), Faris crosses only
@@ -92,7 +102,8 @@ and has caught real soft-locks before (a pipe taller than the player's jump).
 - Audio can only start after a user gesture; `audio.unlock()` is called on
   first keypress/pointerdown in `main.js`.
 - Best score, mute, day/night and scaling prefs persist via `localStorage`
-  (`pixelbros_best`, `pixelbros_mute`, `pixelbros_night`, `pixelbros_fit`).
+  (`pixelbros_best`, `pixelbros_mute`, `pixelbros_night`, `pixelbros_fit`,
+  `pixelbros_touch`).
 - The canvas renders at 480×272 and is scaled by CSS with
   `image-rendering: pixelated`. `resize()` in `main.js` fills the window at a
   fractional scale by default (fit mode); **F** toggles pixel-perfect integer

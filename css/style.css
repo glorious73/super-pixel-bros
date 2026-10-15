@@ -15,12 +15,16 @@ body {
   gap: 8px;
 }
 
+#stage { position: relative; }
+
 canvas {
+  display: block;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   background: #000;
   border: 2px solid #2a2a3e;
   box-shadow: 0 0 40px rgba(40, 60, 160, 0.25);
+  touch-action: none;
 }
 
 footer {
@@ -36,4 +40,75 @@ footer {
 
 html[dir="rtl"] footer {
   letter-spacing: 0;
+}
+
+/* ------------------------------------------------------------ touch mode */
+/* Enabled by adding class "touch" to <body> (auto on touch devices, or
+   toggled with T). Buttons overlay the canvas edges like a gamepad. */
+#touch {
+  display: none;
+  position: absolute;
+  inset: 0;
+  pointer-events: none; /* only the buttons itself are interactive */
+}
+
+body.touch #touch { display: block; }
+
+.tbtn {
+  position: absolute;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  background: rgba(20, 24, 48, 0.35);
+  color: rgba(255, 255, 255, 0.9);
+  font: bold 20px "Courier New", monospace;
+  padding: 0;
+}
+
+.tbtn:active { background: rgba(255, 255, 255, 0.35); }
+
+.tbtn.small {
+  width: 34px;
+  height: 34px;
+  font-size: 13px;
+  top: 6px;
+  opacity: 0.85;
+}
+
+#btnL { left: 12px; bottom: 12px; }
+#btnR { left: 82px; bottom: 12px; }
+#btnJump { right: 12px; bottom: 12px; width: 68px; height: 68px; }
+#btnPause { right: 8px; }
+#btnTitle { right: 48px; display: none; }
+
+body.touch[data-state="pause"] #btnTitle,
+body.touch[data-state="map"] #btnTitle { display: flex; }
+
+/* portrait phones/tablets: ask for landscape (game is 16:9-ish) */
+#rotate {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: rgba(5, 5, 12, 0.92);
+  color: #ffd83d;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font: bold 14px "Courier New", "DejaVu Sans Mono", "Amiri", monospace;
+  letter-spacing: 1px;
+  padding: 20px;
+}
+
+@media (pointer: coarse) and (orientation: portrait) {
+  body.touch #rotate { display: flex; }
 }

@@ -2,12 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Super Pixel Bros</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <canvas id="game" width="480" height="272"></canvas>
+  <div id="stage">
+    <canvas id="game" width="480" height="272"></canvas>
+    <div id="touch">
+      <button id="btnL" class="tbtn" tabindex="-1" aria-label="left">&#9664;</button>
+      <button id="btnR" class="tbtn" tabindex="-1" aria-label="right">&#9654;</button>
+      <button id="btnJump" class="tbtn" tabindex="-1" aria-label="jump">A</button>
+      <button id="btnPause" class="tbtn small" tabindex="-1" aria-label="pause">II</button>
+      <button id="btnTitle" class="tbtn small" tabindex="-1" aria-label="title">Q</button>
+    </div>
+    <div id="rotate">ROTATE TO LANDSCAPE</div>
+  </div>
   <footer id="footer">SUPER PIXEL BROS</footer>
   <script type="module" src="js/main.js"></script>
 </body>

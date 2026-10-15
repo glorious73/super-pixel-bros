@@ -6,7 +6,8 @@ import { parseLevel, LEVEL_COUNT, T, VIEW_W, VIEW_H } from './levels.js';
 import { CHARACTERS, Player, Shell, spawnEnemy, overlaps } from './entities.js';
 import { drawWorld, drawHUD } from './renderer.js';
 import {
-  drawTitle, drawSelect, drawClear, drawGameOver, drawVictory, drawIntro, drawPause,
+  drawTitle, drawSelect, drawMap, drawClear, drawGameOver, drawVictory,
+  drawIntro, drawPause,
 } from './ui.js';
 
 export default class Game {
@@ -20,6 +21,11 @@ export default class Game {
     this.levelCount = LEVEL_COUNT;
     this.selIdx = 0;
     this.char = CHARACTERS[0];
+    // adventure map: hero walks between stage nodes; cleared[] tracks progress
+    this.node = 0;
+    this.cursor = 0;
+    this.cleared = Array(LEVEL_COUNT).fill(false);
+    this.mapWalk = null; // { from, to, t } while the hero walks to next node
     this.score = 0;
     this.coins = 0;
     this.lives = 3;
@@ -107,8 +113,11 @@ export default class Game {
     this.score = 0;
     this.coins = 0;
     this.lives = 3;
-    this.loadLevel(0);
-    this.state = 'play';
+    this.node = 0;
+    this.cursor = 0;
+    this.cleared = Array(LEVEL_COUNT).fill(false);
+    this.mapWalk = null;
+    this.state = 'map';
   }
 
   saveBest() {
@@ -185,6 +194,9 @@ export default class Game {
         if (this.input.pressed('Escape')) this.state = 'pause';
         this.updatePlay();
         break;
+      case 'map':
+        this.updateMap();
+        break;
       case 'pause':
         if (this.input.pressed('Escape')) this.state = 'play';
         if (this.input.pressed('KeyQ')) {
@@ -193,7 +205,7 @@ export default class Game {
         }
         break;
       case 'clear':
-        if (this.input.pressed('Enter')) this.nextLevel();
+        if (this.input.pressed('Enter')) this.finishStage();
         break;
       case 'gameover':
         if (this.input.pressed('Enter')) {
@@ -213,15 +225,53 @@ export default class Game {
     if (this.shake > 0.3) this.shake *= 0.86; else this.shake = 0;
   }
 
-  nextLevel() {
-    if (this.levelIdx + 1 < LEVEL_COUNT) {
-      this.loadLevel(this.levelIdx + 1);
-      this.state = 'play';
+  // ------------------------------------------------------------ adventure map
+  finishStage() {
+    const i = this.levelIdx;
+    this.cleared[i] = true;
+    if (i + 1 < LEVEL_COUNT) {
+      this.state = 'map';
+      if (i >= this.node) {
+        // cleared the frontier stage: hero walks on to the next node
+        // (updateMap moves `node` and `cursor` when the walk completes)
+        this.mapWalk = { from: i, to: i + 1, t: 0 };
+      } else {
+        this.mapWalk = null; // replay of a cleared stage: stay at the frontier
+        this.cursor = this.node;
+      }
       this.sfx('confirm');
     } else {
       this.saveBest();
       this.state = 'victory';
       this.sfx('victory');
+    }
+  }
+
+  updateMap() {
+    if (this.mapWalk) {
+      if (this.input.pressed('Enter')) this.mapWalk.t = 0.99; // skip walk
+      this.mapWalk.t += 1 / 80;
+      if (this.mapWalk.t >= 1) {
+        this.node = this.mapWalk.to;
+        this.cursor = this.node;
+        this.mapWalk = null;
+        this.sfx('confirm');
+      }
+      return;
+    }
+    if (this.input.pressed('ArrowLeft') || this.input.pressed('KeyA')) {
+      this.cursor = Math.max(0, this.cursor - 1); this.sfx('select');
+    }
+    if (this.input.pressed('ArrowRight') || this.input.pressed('KeyD')) {
+      this.cursor = Math.min(this.node, this.cursor + 1); this.sfx('select');
+    }
+    if (this.input.pressed('KeyQ') || this.input.pressed('Escape')) {
+      this.saveBest();
+      this.state = 'title'; this.sfx('confirm');
+    }
+    if (this.input.pressed('Enter')) {
+      this.loadLevel(this.cursor);
+      this.state = 'play'; this.sfx('confirm');
     }
   }
 
@@ -360,6 +410,7 @@ export default class Game {
     switch (this.state) {
       case 'title': drawTitle(ctx, this); break;
       case 'select': drawSelect(ctx, this); break;
+      case 'map': drawMap(ctx, this); break;
       case 'play':
       case 'pause':
         drawWorld(ctx, this);

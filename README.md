@@ -20,6 +20,10 @@ static server works — ES modules need `http://`, not `file://`.
 
 - **5 levels** with a rising difficulty curve: Sunny Plains, Rolling Hills,
   Dark Caves, Sky Heights and Lava Fortress.
+- **Adventure map:** after each stage your hero walks the world map to the
+  next node — cleared stages fly a flag and are replayable from the map
+  (←/→ to pick, Enter to play), and beating the Lava Fortress ends with a
+  trophy celebration.
 - **5 playable heroes** with different stats, picked on a carousel
   (←/→ to browse):
   - **Rosso** — balanced, survives one extra hit per life
@@ -39,6 +43,10 @@ static server works — ES modules need `http://`, not `file://`.
   foes, question blocks, moving platforms, spikes and lava.
 - Score, coins, lives, best-score save (localStorage), pause with quit-to-title,
   level retry.
+- **Touch controls** for tablets and landscape phones: on-screen ◀ ▶ + jump
+  buttons and a pause button appear automatically on touch devices (toggle
+  with `T`); in portrait you get a rotate-to-landscape hint. Tap the canvas
+  to confirm menus.
 
 ## Controls
 
@@ -46,14 +54,15 @@ static server works — ES modules need `http://`, not `file://`.
 |---|---|
 | ← → / A D | Move |
 | Space / ↑ / W | Jump (hold for higher) |
-| Enter | Confirm / next stage |
+| Enter | Confirm / start stage (on the map, ◀ ▶ picks cleared stages) |
 | N | Toggle day / night |
 | M | Mute / unmute |
 | Esc | Pause / resume |
-| Q (while paused) | Quit to title (best score kept) |
+| Q (while paused or on the map) | Quit to title (best score kept) |
 | R | Retry (lose a life, instant) |
 | F | Toggle fit-window / pixel-perfect scaling |
 | L | Toggle language (English / العربية) |
+| T | Show / hide touch controls (auto-on for touch devices) |
 
 ## Project layout
 
@@ -68,7 +77,7 @@ js/entities.js      player characters, enemies, collision helpers
 js/renderer.js      tile grid, entities, HUD
 js/sprites.js       procedural pixel-art drawing
 js/theme.js         day/night palettes, parallax backdrop
-js/ui.js            title / select / clear / game-over / victory screens
+js/ui.js            title / select / adventure map / clear / game-over / victory screens
 js/audio.js         Web Audio synth (SFX + music)
 js/input.js         keyboard handling
 tools/serve.py          static server that sends Cache-Control: no-store

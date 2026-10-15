@@ -71,6 +71,28 @@ export function drawHero(ctx, ch, x, y, facing, moving, onGround, t) {
   ctx.restore();
 }
 
+// Gold trophy cup, ~12x9 px at (x,y); sparkle twinkles with time.
+export function drawTrophy(ctx, x, y, time) {
+  x = Math.round(x); y = Math.round(y);
+  ctx.fillStyle = '#d8a01c';                 // cup bowl
+  ctx.fillRect(x + 2, y + 1, 8, 4);
+  ctx.fillStyle = '#ffd83d';
+  ctx.fillRect(x + 1, y, 10, 2);             // rim
+  ctx.fillRect(x + 4, y + 2, 2, 2);          // shine
+  ctx.fillStyle = '#d8a01c';                 // handles
+  ctx.fillRect(x, y + 2, 2, 2);
+  ctx.fillRect(x + 10, y + 2, 2, 2);
+  ctx.fillRect(x + 5, y + 5, 2, 2);          // stem
+  ctx.fillStyle = '#a87a10';                 // base
+  ctx.fillRect(x + 3, y + 7, 6, 1);
+  if (Math.floor((time || 0) / 12) % 2) {    // twinkle
+    ctx.fillStyle = '#fff8c8';
+    ctx.fillRect(x + 9, y - 1, 1, 1);
+    ctx.fillRect(x + 11, y + 4, 1, 1);
+    ctx.fillRect(x + 1, y + 5, 1, 1);
+  }
+}
+
 // 16x14 box
 export function drawGoomba(ctx, x, y, t, dead) {
   x = Math.round(x); y = Math.round(y);
