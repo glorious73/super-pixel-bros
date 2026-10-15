@@ -59,12 +59,12 @@ function level(spec, build, extra) {
 
 const LEVELS = [
   // 1 — Sunny Plains: gentle tutorial walk
-  level({ name: 'SUNNY PLAINS', theme: 0, w: 140, spawn: { x: 2, y: 13 } }, (b) => {
+  level({ name: 'SUNNY PLAINS', nameKey: 'level.plains', theme: 0, w: 140, spawn: { x: 2, y: 13 } }, (b) => {
     b.ground(0, 18).ground(21, 13).ground(37, 15).ground(56, 84);
     b.arch(18, 13, 3).arch(34, 13, 3).arch(52, 13, 4);
     b.coins(9, 11, 4);
     b.q(13, 11).q(14, 11).q(15, 11);
-    b.pipe(24, 3).pipe(44, 4);
+    b.pipe(24, 3).pipe(44, 3);
     b.rect(40, 11, 5, 1, 'B').q(42, 11).set(41, 11, 'o').set(43, 11, 'o');
     b.set(30, 14, 'g').set(47, 13, 'g').set(62, 14, 'g')
      .set(78, 14, 'g').set(100, 14, 'g').set(118, 14, 'g');
@@ -75,10 +75,10 @@ const LEVELS = [
   }),
 
   // 2 — Rolling Hills: wider gaps, koopas, more pipes
-  level({ name: 'ROLLING HILLS', theme: 1, w: 160, spawn: { x: 2, y: 13 } }, (b) => {
-    b.ground(0, 22).ground(26, 18).ground(49, 21).ground(74, 32).ground(110, 50);
+  level({ name: 'ROLLING HILLS', nameKey: 'level.hills', theme: 1, w: 160, spawn: { x: 2, y: 13 } }, (b) => {
+    b.ground(0, 22).ground(26, 18).ground(48, 22).ground(74, 32).ground(110, 50);
     b.arch(22, 13, 4).arch(44, 13, 5).arch(69, 13, 5).arch(106, 13, 4);
-    b.pipe(16, 4).pipe(40, 3).pipe(70, 3).pipe(102, 4);
+    b.pipe(16, 3).pipe(40, 3).pipe(70, 3).pipe(102, 3);
     b.set(12, 14, 'g').set(28, 14, 'k').set(34, 14, 'g');
     b.set(52, 14, 'g').set(58, 14, 'k').set(64, 14, 'g');
     b.set(84, 14, 'g').set(92, 14, 'k').set(118, 14, 'g');
@@ -93,7 +93,7 @@ const LEVELS = [
   }),
 
   // 3 — Dark Caves: moving platforms, spikes, first spiny
-  level({ name: 'DARK CAVES', theme: 2, w: 170, spawn: { x: 2, y: 13 } }, (b) => {
+  level({ name: 'DARK CAVES', nameKey: 'level.caves', theme: 2, w: 170, spawn: { x: 2, y: 13 } }, (b) => {
     b.ground(0, 170);
     b.rect(0, 0, 170, 1, '#');
     b.rect(24, 1, 8, 3, '#'); b.rect(70, 1, 10, 4, '#');
@@ -123,7 +123,7 @@ const LEVELS = [
   }),
 
   // 4 — Sky Heights: precision jumps over the void
-  level({ name: 'SKY HEIGHTS', theme: 3, w: 180, spawn: { x: 2, y: 11 } }, (b) => {
+  level({ name: 'SKY HEIGHTS', nameKey: 'level.sky', theme: 3, w: 180, spawn: { x: 2, y: 11 } }, (b) => {
     b.rect(0, 13, 7, 4, '#');
     b.coins(2, 11, 4);
     // stepping platforms: gaps of 4, two gaps of 5 bridged by movers
@@ -163,13 +163,13 @@ const LEVELS = [
   }),
 
   // 5 — Lava Fortress: the gauntlet
-  level({ name: 'LAVA FORTRESS', theme: 4, w: 200, spawn: { x: 2, y: 13 } }, (b) => {
-    b.ground(0, 30).ground(34, 24).ground(63, 37).ground(107, 43).ground(155, 45);
+  level({ name: 'LAVA FORTRESS', nameKey: 'level.fortress', theme: 4, w: 200, spawn: { x: 2, y: 13 } }, (b) => {
+    b.ground(0, 30).ground(34, 24).ground(62, 38).ground(107, 43).ground(154, 46);
     b.rect(30, 15, 4, 2, 'L');
-    b.rect(58, 15, 5, 2, 'L');
+    b.rect(58, 15, 4, 2, 'L');
     b.rect(100, 15, 7, 2, 'L');
-    b.rect(150, 15, 5, 2, 'L');
-    b.arch(30, 12, 4).arch(58, 12, 5).arch(100, 12, 7).arch(150, 12, 5);
+    b.rect(150, 15, 4, 2, 'L');
+    b.arch(30, 12, 4).arch(58, 12, 4).arch(100, 12, 7).arch(150, 12, 4);
     b.rect(70, 14, 3, 1, '^'); b.rect(130, 14, 3, 1, '^');
     b.rect(16, 11, 1, 1, '?').rect(22, 11, 3, 1, 'B').q(23, 11);
     b.rect(44, 11, 4, 1, 'B').q(46, 11);
@@ -217,6 +217,7 @@ export function parseLevel(idx) {
   }
   return {
     name: def.name,
+    nameKey: def.nameKey || 'level.plains',
     theme: def.theme,
     w: b.w,
     h: ROWS,

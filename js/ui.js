@@ -1,8 +1,9 @@
-// Menu screens: title, character select, clear, game over, victory.
+// Menu screens: title, character select (carousel), clear, game over, victory.
 import { palette, drawBackdrop } from './theme.js';
 import { drawHero } from './sprites.js';
 import { text } from './renderer.js';
 import { CHARACTERS } from './entities.js';
+import { t, isArabic, otherLang } from './i18n.js';
 
 function menuBg(ctx, g) {
   const pal = palette(0, g.nightMix);
@@ -19,71 +20,127 @@ export function drawTitle(ctx, g) {
   const bob = Math.sin(g.t * 0.04) * 4;
   ctx.textAlign = 'center';
   text(ctx, 'SUPER', 240, 84 + bob, '#ffd83d', 26);
-  text(ctx, 'PIXEL BROS', 240, 116 + bob, '#ff5a4e', 34);
+  text(ctx, t('app.title').split(' ').slice(1).join(' '), 240, 116 + bob, '#ff5a4e', 34);
   text(ctx, 'SUPER', 240, 83 + bob, '#fff0a0', 26);
-  text(ctx, 'PIXEL BROS', 240, 115 + bob, '#ffb0a0', 34);
+  text(ctx, t('app.title').split(' ').slice(1).join(' '), 240, 115 + bob, '#ffb0a0', 34);
 
   if (Math.floor(g.t / 30) % 2) {
-    centerText(ctx, 'PRESS  ENTER  TO  START', 240, 168, '#ffffff', 12);
+    centerText(ctx, t('press_enter'), 240, 168, '#ffffff', 12);
   }
-  centerText(ctx, 'ARROWS/WASD MOVE    SPACE JUMP', 240, 196, '#e8e8f8', 9);
-  centerText(ctx, 'N DAY/NIGHT  M MUTE  R RETRY  F SCALE', 240, 210, '#e8e8f8', 9);
-  centerText(ctx, `BEST ${String(g.best).padStart(6, '0')}`, 240, 236, '#ffd83d', 10);
-  centerText(ctx, '3 HEROES   5 WORLDS   DAY OR NIGHT', 240, 252, '#c8c8e0', 9);
+  centerText(ctx, t('controls.move'), 240, 196, '#e8e8f8', 9);
+  centerText(ctx, t('controls.actions'), 240, 210, '#e8e8f8', 9);
+  centerText(ctx, t('best', { n: String(g.best).padStart(6, '0') }), 240, 236, '#ffd83d', 10);
+  centerText(ctx, t('cast_line'), 240, 252, '#c8c8e0', 9);
 }
 
+// ---------------------------------------------------------------- select
+// Carousel: center card + neighbors peeking from both sides.
 export function drawSelect(ctx, g) {
   menuBg(ctx, g);
-  ctx.textAlign = 'center';
-  text(ctx, 'CHOOSE YOUR HERO', 240, 34, '#ffffff', 16);
+  centerText(ctx, t('choose_hero'), 240, 32, '#ffffff', 16);
 
-  for (let i = 0; i < 3; i++) {
-    const ch = CHARACTERS[i];
-    const sel = i === g.selIdx;
-    const x = 60 + i * 130;
-    const y = sel ? 58 : 66;
-    const w = 110, h = sel ? 152 : 144;
-    ctx.fillStyle = sel ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.4)';
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = sel ? '#ffd83d' : 'rgba(255,255,255,0.25)';
-    ctx.lineWidth = sel ? 2 : 1;
-    ctx.strokeRect(x - 0.5, y - 0.5, w + 1, h + 1);
-
-    ctx.save();
-    ctx.translate(x + w / 2, y + 16);
-    ctx.scale(3, 3);
-    drawHero(ctx, ch, -6, 0, 1, false, true, sel ? g.t : 0);
-    ctx.restore();
-
-    text(ctx, ch.name, x + w / 2, y + 84, sel ? '#ffd83d' : '#ffffff', 11);
-    ctx.textAlign = 'left';
-    statBar(ctx, 'SPD', (ch.speed - 1.6) / 1.8, x + 10, y + 98, '#ff8a4e');
-    statBar(ctx, 'JMP', (-ch.jump - 6.2) / 1.8, x + 10, y + 110, '#5ab0ff');
-    for (let hIdx = 0; hIdx < 2; hIdx++) {
-      ctx.fillStyle = hIdx < ch.hp ? '#ff5a6e' : 'rgba(255,255,255,0.15)';
-      ctx.fillRect(x + 46 + hIdx * 10, y + 121, 7, 6);
-    }
-    ctx.textAlign = 'center';
-    ctx.font = 'bold 7px "Courier New", monospace';
-    ctx.fillStyle = '#c8c8e0';
-    ctx.fillText(ch.blurb, x + w / 2, y + 140);
-    ctx.textAlign = 'left';
+  const n = CHARACTERS.length;
+  // draw neighbors (behind), then the selected card on top
+  const order = [];
+  for (let d = 1; d <= 2; d++) {
+    order.push((g.selIdx - d + n) % n);
+    order.push((g.selIdx + d) % n);
   }
+  order.push(g.selIdx);
+
+  for (const i of order) {
+    let d = i - g.selIdx;
+    if (d > n / 2) d -= n;
+    if (d < -n / 2) d += n;
+    if (Math.abs(d) > 2) continue;
+    const ch = CHARACTERS[i];
+    if (d !== 0) drawSideCard(ctx, ch, d);
+    else drawMainCard(ctx, ch, g.t);
+  }
+
+  // nav arrows
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  tri(ctx, 14, 132, -1);
+  tri(ctx, 466, 132, 1);
+
+  centerText(ctx, t('select_hint'), 240, 240, '#ffffff', 10);
+  centerText(ctx, `L  ${otherLang() === 'ar' ? 'عربي' : 'ENGLISH'}`, 240, 256, '#a8b8ff', 9);
+}
+
+function tri(ctx, x, y, dir) {
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + dir * 10, y - 7);
+  ctx.lineTo(x + dir * 10, y + 7);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawSideCard(ctx, ch, d) {
+  const cx = 240 + d * 148;
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(cx - 45, 72, 90, 122);
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.strokeRect(cx - 45.5, 71.5, 91, 123);
+  ctx.save();
+  ctx.translate(cx, 96);
+  ctx.scale(2, 2);
+  drawHero(ctx, ch, -6, 0, d > 0 ? 1 : -1, false, true, 0);
+  ctx.restore();
   ctx.textAlign = 'center';
-  text(ctx, '←  →  SELECT          ENTER  GO!', 240, 240, '#ffffff', 10);
-  text(ctx, 'N SWITCHES DAY / NIGHT', 240, 256, '#a8b8ff', 8);
+  text(ctx, t(`hero.${ch.id}.name`), cx, 178, '#ffffff', 10);
+  hearts(ctx, ch, cx - ch.hp * 4, 188, 5);
+  ctx.restore();
+}
+
+function drawMainCard(ctx, ch, time) {
+  const x = 165, w = 150, y = 46, h = 168;
+  ctx.fillStyle = 'rgba(255,255,255,0.16)';
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = '#ffd83d';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x - 1, y - 1, w + 2, h + 2);
+
+  ctx.save();
+  ctx.translate(x + w / 2, y + 12);
+  ctx.scale(3, 3);
+  drawHero(ctx, ch, -6, 0, 1, false, true, time);
+  ctx.restore();
+
+  ctx.textAlign = 'center';
+  text(ctx, t(`hero.${ch.id}.name`), x + w / 2, y + 88, '#ffd83d', 12);
+  ctx.textAlign = 'left';
+  statBar(ctx, t('spd'), (ch.speed - 1.6) / 2.0, x + 14, y + 100, '#ff8a4e');
+  statBar(ctx, t('jmp'), (-ch.jump - 6.2) / 1.8, x + 14, y + 112, '#5ab0ff');
+  hearts(ctx, ch, x + 52, y + 124, 6);
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 7px "DejaVu Sans Mono", "Amiri", monospace';
+  ctx.fillStyle = '#c8c8e0';
+  ctx.fillText(t(`hero.${ch.id}.blurb`), x + w / 2, y + 150);
+  ctx.textAlign = 'left';
+}
+
+function hearts(ctx, ch, x, y, s) {
+  for (let i = 0; i < ch.hp; i++) {
+    ctx.fillStyle = '#ff5a6e';
+    ctx.fillRect(x + i * (s + 3), y, s, s - 1);
+    ctx.fillRect(x + i * (s + 3) + 1, y - 1, s - 2, 1);
+  }
 }
 
 function statBar(ctx, label, val, x, y, col) {
-  ctx.font = 'bold 8px "Courier New", monospace';
+  ctx.font = 'bold 8px "DejaVu Sans Mono", "Amiri", monospace';
   ctx.fillStyle = '#c8c8e0';
   ctx.fillText(label, x, y + 5);
   ctx.fillStyle = 'rgba(255,255,255,0.15)';
-  ctx.fillRect(x + 24, y, 62, 6);
+  ctx.fillRect(x + 28, y, 70, 6);
   ctx.fillStyle = col;
-  ctx.fillRect(x + 24, y, Math.max(4, Math.min(62, val * 62)), 6);
+  ctx.fillRect(x + 28, y, Math.max(4, Math.min(70, val * 70)), 6);
 }
 
+// ---------------------------------------------------------------- results
 function dim(ctx, a) {
   ctx.fillStyle = `rgba(0,0,8,${a})`;
   ctx.fillRect(0, 0, 480, 272);
@@ -92,42 +149,42 @@ function dim(ctx, a) {
 export function drawClear(ctx, g) {
   dim(ctx, 0.45);
   ctx.textAlign = 'center';
-  text(ctx, 'COURSE CLEAR!', 240, 100, '#5aff8a', 24);
-  text(ctx, 'STAGE BONUS  +1000', 240, 132, '#ffd83d', 12);
-  text(ctx, `SCORE  ${g.score}`, 240, 154, '#ffffff', 12);
+  text(ctx, t('course_clear'), 240, 100, '#5aff8a', 24);
+  text(ctx, t('stage_bonus'), 240, 132, '#ffd83d', 12);
+  text(ctx, t('score', { n: g.score }), 240, 154, '#ffffff', 12);
   if (Math.floor(g.t / 24) % 2) {
-    text(ctx, g.levelIdx + 1 < g.levelCount ? 'PRESS ENTER FOR NEXT STAGE' : 'PRESS ENTER', 240, 190, '#ffffff', 10);
+    text(ctx, g.levelIdx + 1 < g.levelCount ? t('next_stage') : t('press_enter2'), 240, 190, '#ffffff', 10);
   }
 }
 
 export function drawGameOver(ctx, g) {
   dim(ctx, 0.6);
   ctx.textAlign = 'center';
-  text(ctx, 'GAME OVER', 240, 110, '#ff5a4e', 26);
-  text(ctx, `SCORE  ${g.score}`, 240, 140, '#ffffff', 12);
+  text(ctx, t('game_over'), 240, 110, '#ff5a4e', 26);
+  text(ctx, t('score', { n: g.score }), 240, 140, '#ffffff', 12);
   if (Math.floor(g.t / 24) % 2) {
-    text(ctx, 'ENTER RETRY STAGE    ESC TITLE', 240, 180, '#ffffff', 10);
+    text(ctx, t('retry_hint'), 240, 180, '#ffffff', 10);
   }
 }
 
 export function drawVictory(ctx, g) {
   menuBg(ctx, g);
-  const t = g.t;
+  const tme = g.t;
   for (let i = 0; i < 30; i++) {
-    const x = (i * 53 + t * 1.3) % 480;
-    const y = (i * 97 + t * 0.7) % 272;
+    const x = (i * 53 + tme * 1.3) % 480;
+    const y = (i * 97 + tme * 0.7) % 272;
     ctx.fillStyle = ['#ffd83d', '#ff5a4e', '#5aff8a', '#5ab0ff'][i % 4];
     ctx.fillRect(x, y, 3, 3);
   }
   ctx.textAlign = 'center';
-  text(ctx, 'THANK YOU!', 240, 84, '#ffd83d', 28);
-  text(ctx, 'THE PIXEL KINGDOM IS SAVED', 240, 116, '#ffffff', 13);
-  drawHero(ctx, g.char, 234, 132, 1, true, true, t);
-  text(ctx, `FINAL SCORE  ${g.score}`, 240, 178, '#ffffff', 14);
-  text(ctx, `BEST  ${String(g.best).padStart(6, '0')}`, 240, 196, '#ffd83d', 10);
-  text(ctx, `COINS  ${g.coins}      MODE  ${g.night ? 'NIGHT' : 'DAY'}`, 240, 212, '#c8c8e0', 10);
-  if (Math.floor(t / 24) % 2) {
-    text(ctx, 'PRESS ENTER FOR TITLE', 240, 244, '#ffffff', 10);
+  text(ctx, t('thanks'), 240, 84, '#ffd83d', 28);
+  text(ctx, t('kingdom_saved'), 240, 116, '#ffffff', 13);
+  drawHero(ctx, g.char, 234, 132, 1, true, true, tme);
+  text(ctx, t('final_score', { n: g.score }), 240, 178, '#ffffff', 14);
+  text(ctx, t('best', { n: String(g.best).padStart(6, '0') }), 240, 196, '#ffd83d', 10);
+  text(ctx, `${t('coins', { n: g.coins })}      ${t('mode', { m: g.night ? t('hud.night') : t('hud.day') })}`, 240, 212, '#c8c8e0', 10);
+  if (Math.floor(tme / 24) % 2) {
+    text(ctx, t('title_back'), 240, 244, '#ffffff', 10);
   }
 }
 
@@ -138,14 +195,14 @@ export function drawIntro(ctx, g) {
   ctx.fillStyle = 'rgba(0,0,8,0.55)';
   ctx.fillRect(0, 100, 480, 52);
   ctx.textAlign = 'center';
-  text(ctx, `WORLD ${g.levelIdx + 1}   ${g.level.name}`, 240, 124, '#ffffff', 15);
-  text(ctx, g.night ? 'NIGHT — MORE FOES, COINS x2' : 'DAYTIME — STANDARD RISK', 240, 142, '#a8b8ff', 9);
+  text(ctx, t('level', { n: g.levelIdx + 1, name: t(g.level.nameKey) }), 240, 124, '#ffffff', 15);
+  text(ctx, g.night ? t('intro.night') : t('intro.day'), 240, 142, '#a8b8ff', 9);
   ctx.globalAlpha = 1;
 }
 
 export function drawPause(ctx, g) {
   dim(ctx, 0.5);
   ctx.textAlign = 'center';
-  text(ctx, 'PAUSED', 240, 130, '#ffffff', 22);
-  text(ctx, 'ESC RESUME   N DAY/NIGHT   M MUTE', 240, 158, '#c8c8e0', 9);
+  text(ctx, t('paused'), 240, 130, '#ffffff', 22);
+  text(ctx, t('pause_hint'), 240, 158, '#c8c8e0', 9);
 }

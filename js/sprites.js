@@ -35,10 +35,31 @@ export function drawHero(ctx, ch, x, y, facing, moving, onGround, t) {
   // head
   ctx.fillStyle = SKIN;
   ctx.fillRect(3, 2, 6, 4);
-  // cap
-  ctx.fillStyle = c;
-  ctx.fillRect(2, 0, 8, 2);
-  ctx.fillRect(7, 2, 5, 1);
+  // headwear
+  const style = ch.style || 'cap';
+  if (style === 'keffiyeh') {
+    ctx.fillStyle = c;                     // sand-colored cloth
+    ctx.fillRect(2, 0, 8, 2);
+    ctx.fillRect(1, 2, 2, 5);              // side drapes
+    ctx.fillRect(9, 2, 2, 5);
+    ctx.fillStyle = DARK;                  // agal cord
+    ctx.fillRect(2, 0, 8, 1);
+    ctx.fillStyle = ch.accent;             // red pattern
+    ctx.fillRect(2, 1, 8, 1);
+    ctx.fillRect(1, 4, 2, 1);
+    ctx.fillRect(9, 3, 2, 1);
+  } else if (style === 'fletch') {
+    ctx.fillStyle = c;                     // cap with arrow fletching
+    ctx.fillRect(2, 0, 8, 2);
+    ctx.fillRect(7, 2, 5, 1);
+    ctx.fillStyle = ch.accent;
+    ctx.fillRect(0, 0, 3, 1);
+    ctx.fillRect(0, -1, 2, 1);
+  } else {
+    ctx.fillStyle = c;
+    ctx.fillRect(2, 0, 8, 2);
+    ctx.fillRect(7, 2, 5, 1);
+  }
   // eye
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(6, 3, 3, 2);

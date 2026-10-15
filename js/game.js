@@ -1,6 +1,7 @@
 // Core game: state machine, world simulation, collisions, scoring.
 import Input from './input.js';
 import audio from './audio.js';
+import { toggleLang } from './i18n.js';
 import { parseLevel, LEVEL_COUNT, T, VIEW_W, VIEW_H } from './levels.js';
 import { CHARACTERS, Player, Shell, spawnEnemy, overlaps } from './entities.js';
 import { drawWorld, drawHUD } from './renderer.js';
@@ -164,17 +165,19 @@ export default class Game {
     this.t++;
     if (this.input.pressed('KeyM')) { audio.toggleMute(); this.sfx('select'); }
     if (this.input.pressed('KeyN')) { this.setNight(!this.night); this.sfx('confirm'); }
+    if (this.input.pressed('KeyL')) { toggleLang(); this.sfx('confirm'); }
 
     switch (this.state) {
       case 'title':
         if (this.input.pressed('Enter')) { this.state = 'select'; this.sfx('confirm'); }
         break;
       case 'select':
+        const n = CHARACTERS.length;
         if (this.input.pressed('ArrowLeft') || this.input.pressed('KeyA')) {
-          this.selIdx = (this.selIdx + 2) % 3; this.sfx('select');
+          this.selIdx = (this.selIdx + n - 1) % n; this.sfx('select');
         }
         if (this.input.pressed('ArrowRight') || this.input.pressed('KeyD')) {
-          this.selIdx = (this.selIdx + 1) % 3; this.sfx('select');
+          this.selIdx = (this.selIdx + 1) % n; this.sfx('select');
         }
         if (this.input.pressed('Enter')) { this.startRun(); this.sfx('confirm'); }
         break;

@@ -29,4 +29,11 @@ footer {
   letter-spacing: 0.5px;
   user-select: none;
   height: 18px;
+  padding: 0 12px;
+  text-align: center;
+  font-family: "Courier New", "DejaVu Sans Mono", "Amiri", monospace;
+}
+
+html[dir="rtl"] footer {
+  letter-spacing: 0;
 }

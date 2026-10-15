@@ -1,21 +1,36 @@
 // Player characters, enemies and tile collision helpers.
 import { T, SOLID, HAZARD } from './levels.js';
 
+// Names and blurbs live in i18n (hero.<id>.name / hero.<id>.blurb).
+// style selects the headwear variant in sprites.drawHero.
 export const CHARACTERS = [
   {
-    id: 'rosso', name: 'ROSSO', color: '#e23d3d', accent: '#ffffff',
+    id: 'rosso', style: 'cap', color: '#e23d3d', accent: '#ffffff',
     speed: 2.4, jump: -7.0, grav: 0.36, fallGrav: 0.36, fallMax: 8,
-    hp: 2, blurb: 'BALANCED  SURVIVES 1 EXTRA HIT',
+    hp: 2,
   },
   {
-    id: 'bolt', name: 'BOLT', color: '#f2c027', accent: '#7a4a00',
+    id: 'bolt', style: 'cap', color: '#f2c027', accent: '#7a4a00',
     speed: 3.15, jump: -6.9, grav: 0.36, fallGrav: 0.38, fallMax: 9,
-    hp: 1, blurb: 'SPEED DEMON  FRAGILE',
+    hp: 1,
   },
   {
-    id: 'aqua', name: 'AQUA', color: '#3f8fe8', accent: '#e8f6ff',
+    id: 'aqua', style: 'cap', color: '#3f8fe8', accent: '#e8f6ff',
     speed: 2.05, jump: -7.7, grav: 0.34, fallGrav: 0.19, fallMax: 4.6,
-    hp: 1, blurb: 'MEGA JUMP  FLOATY FALLS',
+    hp: 1,
+  },
+  {
+    // the knight: sand keffiyeh with red trim — slow, tanky
+    id: 'faris', style: 'keffiyeh', color: '#e9dfc8', accent: '#a52f28',
+    speed: 2.1, jump: -7.2, grav: 0.36, fallGrav: 0.38, fallMax: 9,
+    hp: 3,
+  },
+  {
+    // the arrow: burnt-orange with green fletching — extreme speed,
+    // lower jump (needs pipes kept <= 3 tiles tall in levels)
+    id: 'sahm', style: 'fletch', color: '#c2410c', accent: '#166534',
+    speed: 3.45, jump: -6.55, grav: 0.36, fallGrav: 0.36, fallMax: 8,
+    hp: 1,
   },
 ];
 

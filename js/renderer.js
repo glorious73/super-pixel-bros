@@ -1,5 +1,6 @@
 // Draws the game world: tiles, platforms, entities, player, HUD.
 import { T } from './levels.js';
+import { t, isArabic } from './i18n.js';
 import { palette, drawBackdrop } from './theme.js';
 import {
   drawHero, drawGoomba, drawKoopa, drawShell, drawFlyer, drawSpiny,
@@ -195,20 +196,19 @@ function drawEnemy(ctx, e, t) {
 export function drawHUD(ctx, g) {
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
   ctx.fillRect(0, 0, 480, 18);
-  ctx.font = 'bold 9px "Courier New", monospace';
   ctx.textAlign = 'left';
-  text(ctx, `SCORE ${String(g.score).padStart(6, '0')}`, 8, 13, '#ffffff');
+  text(ctx, t('hud.score', { n: String(g.score).padStart(6, '0') }), 8, 13, '#ffffff', 9);
   ctx.fillStyle = '#f8c81c';
-  ctx.fillRect(110, 6, 6, 6);
+  ctx.fillRect(118, 6, 6, 6);
   ctx.fillStyle = '#ffe87a';
-  ctx.fillRect(111, 7, 2, 2);
-  text(ctx, `x${g.coins}`, 120, 13, '#ffffff');
+  ctx.fillRect(119, 7, 2, 2);
+  text(ctx, `x${g.coins}`, 128, 13, '#ffffff', 9);
   ctx.textAlign = 'center';
-  text(ctx, `${g.levelIdx + 1}  ${g.level.name}`, 240, 13, '#ffffff');
+  text(ctx, t('level', { n: g.levelIdx + 1, name: t(g.level.nameKey) }), 240, 13, '#ffffff', 9);
   ctx.textAlign = 'right';
   for (let i = 0; i < g.lives; i++) heart(ctx, 320 + i * 12, 5, g.player.ch.color);
-  text(ctx, g.night ? 'NIGHT [N]' : 'DAY   [N]', 470, 10, g.night ? '#a8b8ff' : '#ffe14d');
-  text(ctx, g.muted ? 'SOUND OFF [M]' : 'SOUND ON  [M]', 470, 17, '#c8c8d8');
+  text(ctx, g.night ? t('hud.night') : t('hud.day'), 470, 10, g.night ? '#a8b8ff' : '#ffe14d', 9);
+  text(ctx, g.muted ? t('hud.sound_off') : t('hud.sound_on'), 470, 17, '#c8c8d8', 9);
 }
 
 function heart(ctx, x, y, col) {
@@ -222,7 +222,8 @@ function heart(ctx, x, y, col) {
 }
 
 export function text(ctx, str, x, y, col, size = 10) {
-  ctx.font = `bold ${size}px "Courier New", monospace`;
+  ctx.font = `bold ${size}px "Courier New", "DejaVu Sans Mono", "Amiri", monospace`;
+  ctx.direction = isArabic() ? 'rtl' : 'ltr';
   ctx.fillStyle = 'rgba(0,0,0,0.6)';
   ctx.fillText(str, x + 1, y + 1);
   ctx.fillStyle = col;
