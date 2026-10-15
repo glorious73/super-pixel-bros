@@ -8,17 +8,20 @@ graphics are drawn with code and all sound is synthesized.
 
 ```bash
 cd Mario2d
-python3 -m http.server 8000
+python3 tools/serve.py 8000
 ```
 
-then open <http://localhost:8000>. (Any static server works — ES modules
-need `http://`, not `file://`.)
+then open <http://localhost:8000>. `tools/serve.py` is a tiny stdlib server
+that sends `Cache-Control: no-store` so edited files always show up on reload
+(plain `python3 -m http.server` caches modules and serves stale code). Any
+static server works — ES modules need `http://`, not `file://`.
 
 ## Features
 
 - **5 levels** with a rising difficulty curve: Sunny Plains, Rolling Hills,
   Dark Caves, Sky Heights and Lava Fortress.
-- **5 playable heroes** with different stats:
+- **5 playable heroes** with different stats, picked on a carousel
+  (←/→ to browse):
   - **Rosso** — balanced, survives one extra hit per life
   - **Bolt** — fastest runner, but dies to a single hit
   - **Aqua** — mega jump and floaty falls
@@ -34,7 +37,8 @@ need `http://`, not `file://`.)
   shell/hurt/death/clear/victory sound effects (`M` mutes, remembered).
 - Stompable goombas, koopa shells you can kick, un-stompable spiny, flying
   foes, question blocks, moving platforms, spikes and lava.
-- Score, coins, lives, best-score save (localStorage), pause, level retry.
+- Score, coins, lives, best-score save (localStorage), pause with quit-to-title,
+  level retry.
 
 ## Controls
 
@@ -45,7 +49,8 @@ need `http://`, not `file://`.)
 | Enter | Confirm / next stage |
 | N | Toggle day / night |
 | M | Mute / unmute |
-| Esc | Pause |
+| Esc | Pause / resume |
+| Q (while paused) | Quit to title (best score kept) |
 | R | Retry (lose a life, instant) |
 | F | Toggle fit-window / pixel-perfect scaling |
 | L | Toggle language (English / العربية) |
@@ -66,7 +71,23 @@ js/theme.js         day/night palettes, parallax backdrop
 js/ui.js            title / select / clear / game-over / victory screens
 js/audio.js         Web Audio synth (SFX + music)
 js/input.js         keyboard handling
+tools/serve.py          static server that sends Cache-Control: no-store
+tools/check-palette.mjs  palette contrast linter
+tools/check-i18n.mjs     en/ar key-parity linter
 ```
+
+## Verify
+
+No test framework, but the repo carries three zero-dependency checks:
+
+```bash
+node tools/check-palette.mjs   # palette contrast rules (run after theme.js edits)
+node tools/check-i18n.mjs      # en/ar key parity + every t('key') resolves
+```
+
+A per-character reachability test (BFS of every level with each hero's real
+jump envelope) also runs under Node — see `AGENTS.md` for the current copy.
+It has caught real soft-locks, like gaps wider than the slowest hero can jump.
 
 Original characters and melodies — Mario-*style* gameplay without
 Nintendo's assets, so it's safe to share.

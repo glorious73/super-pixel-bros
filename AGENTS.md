@@ -16,7 +16,9 @@ device, together with the user (glorious73).
 
 ```bash
 # serve (ES modules require http://, opening index.html via file:// fails)
-python3 -m http.server 8000
+# tools/serve.py adds Cache-Control: no-store so edits show up on reload
+# (plain `python3 -m http.server` caches modules and serves stale code)
+python3 tools/serve.py 8000
 
 # syntax-check every module (ESM from stdin)
 for f in js/*.js; do node --input-type=module --check < "$f" || echo "FAIL $f"; done
