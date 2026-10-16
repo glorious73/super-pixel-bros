@@ -34,9 +34,13 @@ node tools/check-palette.mjs
 # i18n linter — run after ANY edit to js/i18n.js or UI strings
 node tools/check-i18n.mjs
 
-# per-character reachability: the current physics-based version lives at
-# /tmp/opencode/smoke.mjs — it simulates each hero's real jump envelope and
-# BFS's every level, flagging any level a hero cannot finish.
+# per-character reachability: simulates each hero's real jump envelope and
+# BFS's every level, flagging any level a hero cannot finish
+node tools/check-reachability.mjs
+
+# headless smoke: stubs the browser, drives Game through every state in
+# both languages, incl. the full adventure-map flow and touch input
+node tools/headless.mjs
 ```
 
 There is no test suite and no CI; the reachability check is the closest thing
