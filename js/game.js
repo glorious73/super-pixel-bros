@@ -31,6 +31,8 @@ export default class Game {
     this.lives = 3;
     this.shake = 0;
     this.particles = [];
+    this.popCoins = []; // coins popping out of bumped ? blocks
+    this.bumps = [];    // ?-block bump animations { tx, ty, t }
     this.entities = [];
     this.platforms = [];
     this.cam = { x: 0, y: 0 };
@@ -65,6 +67,8 @@ export default class Game {
     }));
     this.player = new Player(this.char, this.level.spawn.x, this.level.spawn.y);
     this.cam = { x: 0, y: 0 };
+    this.popCoins = [];
+    this.bumps = [];
     this.introT = 120;
     if (this.night) this.spawnNightExtras();
     audio.setTheme(this.level.theme, this.night);
@@ -132,6 +136,8 @@ export default class Game {
     if (this.rows[ty][tx] !== '?') return;
     this.rows[ty][tx] = 'x';
     this.addCoinScore(tx * T + 8, ty * T - 4);
+    this.popCoins.push({ x: tx * T, y: ty * T, vy: -3.6, t: 26 });
+    this.bumps.push({ tx, ty, t: 10 });
     this.sfx('bump');
     this.shake = Math.max(this.shake, 3);
   }
@@ -322,6 +328,12 @@ export default class Game {
       pt.vy += pt.grav; pt.x += pt.vx; pt.y += pt.vy; pt.life--;
     }
     this.particles = this.particles.filter((pt) => pt.life > 0);
+
+    // ?-block feedback: coin popping up, block bumping back down
+    for (const c of this.popCoins) { c.y += c.vy; c.vy += 0.28; c.t--; }
+    this.popCoins = this.popCoins.filter((c) => c.t > 0);
+    for (const b of this.bumps) b.t--;
+    this.bumps = this.bumps.filter((b) => b.t > 0);
 
     // camera
     const tx = pl.x + pl.w / 2 - VIEW_W * 0.45 + pl.vx * 10;

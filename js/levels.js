@@ -63,7 +63,8 @@ const LEVELS = [
     b.ground(0, 18).ground(21, 13).ground(37, 15).ground(56, 84);
     b.arch(18, 13, 3).arch(34, 13, 3).arch(52, 13, 4);
     b.coins(9, 11, 4);
-    b.q(13, 11).q(14, 11).q(15, 11);
+    // first ?-trio one row lower: reachable with a tap-jump (teaches blocks)
+    b.q(13, 12).q(14, 12).q(15, 12);
     b.pipe(24, 3).pipe(44, 3);
     b.rect(40, 11, 5, 1, 'B').q(42, 11).set(41, 11, 'o').set(43, 11, 'o');
     b.set(30, 14, 'g').set(47, 13, 'g').set(62, 14, 'g')

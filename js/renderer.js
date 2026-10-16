@@ -38,6 +38,15 @@ export function drawWorld(ctx, g) {
     ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
   }
   ctx.globalAlpha = 1;
+
+  // coins popping out of bumped ? blocks
+  if (g.popCoins) {
+    for (const c of g.popCoins) {
+      ctx.globalAlpha = Math.min(1, c.t / 8);
+      drawCoin(ctx, c.x, c.y, g.t);
+    }
+    ctx.globalAlpha = 1;
+  }
   ctx.restore();
 
   // night tint ties everything together (caves already dark)
@@ -60,7 +69,16 @@ function drawTiles(ctx, g, pal) {
 }
 
 function drawTile(ctx, ch, tx, ty, g, pal) {
-  const x = tx * T, y = ty * T;
+  let x = tx * T, y = ty * T;
+  // ?-block bump: nudge up and snap back over 10 frames
+  if (g.bumps) {
+    for (const b of g.bumps) {
+      if (b.tx === tx && b.ty === ty) {
+        y -= Math.round(Math.sin(((10 - b.t) / 10) * Math.PI) * 4);
+        break;
+      }
+    }
+  }
   switch (ch) {
     case '#': {
       ctx.fillStyle = pal.ground;

@@ -122,7 +122,7 @@ export class Player {
       this.jumpBuf = 0; this.coyote = 0; this.onGround = false;
       world.sfx('jump');
     }
-    if (!jumpHeld && this.vy < -2.2) this.vy = -2.2;
+    if (!jumpHeld && this.vy < -3.3) this.vy = -3.3;
 
     const g = this.vy > 0 ? (ch.fallGrav || ch.grav) : ch.grav;
     this.vy = Math.min(this.vy + g, ch.fallMax || 8);
