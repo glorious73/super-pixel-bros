@@ -1,8 +1,9 @@
 # Handover — Super Pixel Bros
 
 Written 2026-10-16 by Qwen3.8 Flash Next, the agent that built this project
-together with **glorious73 (Amjad Abujamous)**. Everything here is current as
-of commit `3390dca` (working tree clean, all checks green).
+together with **glorious73 (Amjad Abujamous)**. Updated 2026-10-17 with the
+touch-complete + PWA work. Everything here is current as of that work landing
+(run `git log -1` for the tip; all checks green).
 
 ## What this project is
 
@@ -42,6 +43,9 @@ node tools/check-palette.mjs       # after js/theme.js edits
 node tools/check-i18n.mjs          # after js/i18n.js or any UI string
 node tools/check-reachability.mjs  # after ANY js/levels.js or hero-stats edit
 node tools/headless.mjs            # full state-machine + both languages, no browser
+node tools/gen-icons.mjs           # regenerate icons/ (code-drawn PNGs)
+# ⚠ whenever ANY app-shell file changes: bump VERSION (and ASSETS if files
+#   were added/renamed) in sw.js — installed users otherwise keep stale code
 ```
 
 `check-reachability.mjs` is the crown jewel: it simulates each hero's real
@@ -66,10 +70,20 @@ versioned now).
   `"DejaVu Sans Mono", "Amiri"`; digits stay Western.
 - **Day/Night** (`N`): night = +50% enemies (`nightExtras`), 1.15× enemy
   speed, 2× coin score, octave-down music. It's a difficulty dial, not a skin.
-- **Touch controls:** DOM buttons (◀ ▶ jump pause, Q on pause/map screens)
-  feed `Input.press/release` — the same edge-trigger pipeline as keyboard.
+- **Touch controls:** DOM gamepad (◀ ▶ jump pause, Q on pause/map) feeds
+  `Input.press/release` — the same edge-trigger pipeline as keyboard — shown
+  only in play/pause/map via `body[data-state]`; notch-safe positioning.
   Auto-on for coarse pointers; `T` toggles (`localStorage.pixelbros_touch`);
-  portrait shows a rotate-to-landscape hint. `body[data-state]` drives CSS.
+  portrait shows a rotate-to-landscape hint.
+- **Touch-complete menus + PWA (2026-10-17):** menus run on **canvas UI**
+  (`js/touchui.js`): screens register tap hot spots while drawing their art,
+  taps become `Input.tap(code)` (tap on nothing = Enter, the classic
+  behavior), horizontal swipes become ◀ ▶ on select/map, map nodes are
+  `Node<i>` tap codes, pause/game-over are card menus, and a mute/night/lang
+  icon bar injects M/N/L — so a touch-only user can play everything. PWA:
+  `manifest.webmanifest` (relative scope → works on both Pages URLs) +
+  versioned precache `sw.js` (not registered on localhost by design).
+  Installable, offline-capable, landscape standalone.
 - Keys: arrows/WASD move, Space jump (hold=higher, tap≈1 tile), Enter,
   Esc pause, **Q quit-to-title (from pause or map)**, R retry, N night,
   M mute, L language, F scaling.
@@ -82,7 +96,9 @@ machine `title/select/map/play/pause/clear/gameover/victory` + world facade)
 → `entities.js` (Player/enemies/tile collision) + `levels.js` (declarative
 Builder level defs + `parseLevel`) → `renderer.js`/`sprites.js`/`theme.js`
 (all drawing) + `ui.js` (menu screens incl. `drawMap`) + `audio.js` (synth)
-+ `input.js` (keyboard + virtual buttons) + `i18n.js` (en/ar tables).
++ `input.js` (keyboard + virtual buttons) + `touchui.js` (canvas hot spots,
+tap/swipe gestures, touch-mode flag) + `i18n.js` (en/ar tables) + `sw.js`
+(offline shell).
 
 ## Decisions you should not re-litigate (with reasons)
 
@@ -98,6 +114,14 @@ Builder level defs + `parseLevel`) → `renderer.js`/`sprites.js`/`theme.js`
   look is intentional (`image-rendering: pixelated`).
 - Canvas is 480×272; never enlarge internal resolution to fix blurriness.
   Fit-window scaling by default, F = integer scale.
+- Touch menu affordances are canvas-drawn and inject Input key codes
+  (tap → `Input.tap('KeyM')` etc.) — one input pipeline, keyboard and touch,
+  headless-testable. Do not add DOM buttons for menus.
+- PWA icons are **generated PNGs** (`tools/gen-icons.mjs`, pure Node + a
+  ~40-line PNG encoder): the deliberate, documented exception to the
+  no-binary-assets rule, because iOS needs PNG icons. Edit the tool, never
+  hand-draw. The service worker skips registration on localhost so it can
+  never fight the no-store dev server; bump `VERSION` in `sw.js` per release.
 - Arabic strings: pure-Arabic runs with Latin key names (ENTER, WASD) to
   dodge bidi reordering bugs; keep them that way (the i18n linter checks
   key parity, a human checks wording).
@@ -127,9 +151,10 @@ Builder level defs + `parseLevel`) → `renderer.js`/`sprites.js`/`theme.js`
 - Local initials leaderboard (top-10 per day/night, title-screen entry).
 - Smooth dual-layer parallax backdrop behind the pixelated game canvas.
 - More levels (append to `LEVELS`, obey the pipe/gap rules, run the suite).
-- PWA manifest + icons (drawn), offline support.
 - Optional: if a global board is ever wanted, a decoupled JSON backend
   behind one small module — never couple gameplay to a server.
+- A portrait, touch-first sibling game (separate project, reuses this
+  engine's DNA: synth audio, procedural art, i18n, hot-spot layer).
 
 ## Credit
 

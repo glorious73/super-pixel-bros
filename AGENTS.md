@@ -34,6 +34,10 @@ node tools/check-palette.mjs
 # i18n linter — run after ANY edit to js/i18n.js or UI strings
 node tools/check-i18n.mjs
 
+# regenerate PWA icons (code-drawn PNGs) after editing tools/gen-icons.mjs;
+# when ANY app-shell file changes, also bump VERSION in sw.js
+node tools/gen-icons.mjs
+
 # per-character reachability: simulates each hero's real jump envelope and
 # BFS's every level, flagging any level a hero cannot finish
 node tools/check-reachability.mjs
@@ -58,18 +62,36 @@ and has caught real soft-locks before (a pipe taller than the player's jump).
 | `js/renderer.js` | tile grid + entity + HUD drawing |
 | `js/sprites.js` | procedural pixel-art drawing (rects only) |
 | `js/theme.js` | per-level day/night palettes, color lerp, parallax backdrop. Palettes carry `spike`/`pole` colors so those objects harmonize per theme and mode |
-| `js/ui.js` | menu screens |
+| `js/ui.js` | menu screens (incl. touch hot spots, option bar, pause/game-over cards) |
 | `js/audio.js` | Web Audio synth: SFX + per-level looping melodies (night = octave down, slower, triangle) |
-| `js/input.js` | keyboard state + edge-triggered `pressed()` (cleared each rAF frame) |
+| `js/input.js` | keyboard state + edge-triggered `pressed()` (cleared each rAF frame); `press`/`release`/`tap` for virtual keys |
+| `js/touchui.js` | canvas tap hot spots, tap/swipe gesture recognizer, touch-mode flag |
+| `sw.js` + `manifest.webmanifest` | PWA service worker (versioned app-shell precache; bump `VERSION` on any change) + install manifest |
+| `icons/` | app icons — generated PNGs, regenerate with `node tools/gen-icons.mjs` |
 
 ## Key facts & gotchas
 
-- **Touch controls:** on-screen ◀ ▶ / jump / pause buttons overlay the canvas
-  (DOM buttons in `index.html`, styled in `style.css`, wired in `main.js` via
-  `Input.press/release` — same edge triggers as keyboard). Auto-enabled on
-  coarse-pointer devices; `T` toggles (`localStorage.pixelbros_touch`).
-  `body[data-state]` mirrors the game state for CSS (the title button only
-  shows on pause/map). Portrait shows a rotate-to-landscape hint.
+- **Touch controls:** on-screen ◀ ▶ / jump / pause / Q DOM buttons (shown only
+  when `body[data-state]` is play/pause/map — menus run on canvas UI) plus
+  **canvas touch UI** in `js/touchui.js`: screens register tap hot spots
+  (`hotspot(x, y, w, h, code)`) while they draw their button art, and
+  `main.js` turns a tap into `Input.tap(code)` — the same edge triggers as
+  the keyboard (tap with no hot spot = Enter). Horizontal swipes become ◀ ▶
+  on select/map; map nodes fire `Node<i>` codes (first tap selects, tap again
+  plays). Pause and game-over show tappable cards; mute/night/lang is a
+  canvas icon bar (touch mode only) injecting M/N/L. Auto-enabled on coarse
+  pointers; `T` toggles (`localStorage.pixelbros_touch`). Portrait shows a
+  rotate-to-landscape hint. DOM buttons sit inside notch safe areas
+  (`env(safe-area-inset-*)`).
+- **PWA:** `manifest.webmanifest` (relative `start_url`/`scope`, so it works
+  on both Pages URLs) + `sw.js` (versioned precache of the app shell;
+  navigation network-first, assets cache-first). **Bump `VERSION` and update
+  `ASSETS` in `sw.js` whenever an app-shell file changes**, or installed
+  users keep stale code. The SW is deliberately NOT registered on
+  `localhost` — it can never shadow `tools/serve.py` during development.
+  Icons are code-drawn PNGs: `node tools/gen-icons.mjs` regenerates `icons/`
+  (the one accepted binary-asset exception — reproducible from source, no
+  image editor involved).
 - **Adventure map** (`map` state in `game.js`, `drawMap` in `ui.js`): hero
   walks a 5-node path between stages; clearing the frontier stage walks the
   hero to the next node (Enter skips the walk), cleared stages are replayable
@@ -119,7 +141,9 @@ and has caught real soft-locks before (a pipe taller than the player's jump).
 - ES modules, no bundler, no new dependencies without strong reason.
 - 2-space indent, single quotes, semicolons (match surrounding code).
 - Sprites are procedural rect drawings in `sprites.js` — do not add image
-  files; music/SFX are synthesized — do not add audio files.
+  files; music/SFX are synthesized — do not add audio files. (Exception:
+  `icons/`, generated from code by `tools/gen-icons.mjs` — change the design
+  in the tool and regenerate, never hand-draw or drop in art.)
 - Game content is original (names, melodies, art). Never introduce
   Nintendo-copyrighted assets, names or lyrics.
 - When changing difficulty: the intended curve is Sunny Plains < Rolling
@@ -130,4 +154,4 @@ and has caught real soft-locks before (a pipe taller than the player's jump).
 
 Extra levels (new entries in `LEVELS`), new enemy types (class in
 `entities.js` + spawn char + draw fn), power-ups (e.g. coin magnet),
-touch controls, PWA manifest. Keep zero-dependency and no-assets properties.
+extra hero costumes in `drawHero`. Keep zero-dependency and no-assets properties.
