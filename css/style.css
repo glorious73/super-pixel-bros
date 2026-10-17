@@ -43,6 +43,9 @@ footer {
   font-family: "Courier New", "DejaVu Sans Mono", "Amiri", monospace;
 }
 
+/* keyboard help text: useless on phones, and its height is canvas we want */
+body.touch footer { display: none; }
+
 html[dir="rtl"] footer {
   letter-spacing: 0;
 }

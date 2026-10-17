@@ -4,7 +4,7 @@
 // VERSION below — always bump it when any precached file changes).
 // Not registered on localhost (see main.js) so it never hides dev changes.
 
-const VERSION = 'spb-v1';
+const VERSION = 'spb-v2';
 const CACHE = VERSION + '-shell';
 
 const ASSETS = [
@@ -16,6 +16,7 @@ const ASSETS = [
   './js/game.js',
   './js/input.js',
   './js/touchui.js',
+  './js/view.js',
   './js/levels.js',
   './js/entities.js',
   './js/renderer.js',
