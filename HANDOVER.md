@@ -112,8 +112,11 @@ tap/swipe gestures, touch-mode flag) + `i18n.js` (en/ar tables) + `sw.js`
   and rejected: breaks static hosting + client scores are unvalidatable.
 - Sharper dual-canvas backgrounds: discussed, **not built**. Current pixel
   look is intentional (`image-rendering: pixelated`).
-- Canvas is 480×272; never enlarge internal resolution to fix blurriness.
-  Fit-window scaling by default, F = integer scale.
+- Canvas is 480×272 as the *minimum* view; width grows to 640 on wide
+  screens (js/view.js, tile-snapped) and is never enlarged past that or
+  made taller. Fit-window scaling by default, F = integer scale.
+  Phones: no footer, tight margins, fullscreen (PWA display_override +
+  browser first-tap fallback).
 - Touch menu affordances are canvas-drawn and inject Input key codes
   (tap → `Input.tap('KeyM')` etc.) — one input pipeline, keyboard and touch,
   headless-testable. Do not add DOM buttons for menus.

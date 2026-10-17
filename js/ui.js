@@ -4,6 +4,7 @@ import { drawHero, drawTrophy } from './sprites.js';
 import { text } from './renderer.js';
 import { CHARACTERS } from './entities.js';
 import { NAME_KEYS } from './levels.js';
+import { view } from './view.js';
 import { t, isArabic, otherLang, getLang } from './i18n.js';
 import TouchUI from './touchui.js';
 
@@ -98,28 +99,30 @@ function menuCard(ctx, x, y, w, h, label, code) {
 
 export function drawTitle(ctx, g) {
   menuBg(ctx, g);
+  const cx = view.w / 2;
   const bob = Math.sin(g.t * 0.04) * 4;
   ctx.textAlign = 'center';
-  text(ctx, 'SUPER', 240, 84 + bob, '#ffd83d', 26);
-  text(ctx, t('app.title').split(' ').slice(1).join(' '), 240, 116 + bob, '#ff5a4e', 34);
-  text(ctx, 'SUPER', 240, 83 + bob, '#fff0a0', 26);
-  text(ctx, t('app.title').split(' ').slice(1).join(' '), 240, 115 + bob, '#ffb0a0', 34);
+  text(ctx, 'SUPER', cx, 84 + bob, '#ffd83d', 26);
+  text(ctx, t('app.title').split(' ').slice(1).join(' '), cx, 116 + bob, '#ff5a4e', 34);
+  text(ctx, 'SUPER', cx, 83 + bob, '#fff0a0', 26);
+  text(ctx, t('app.title').split(' ').slice(1).join(' '), cx, 115 + bob, '#ffb0a0', 34);
 
   if (Math.floor(g.t / 30) % 2) {
-    centerText(ctx, TouchUI.mode ? t('press_tap') : t('press_enter'), 240, 168, '#ffffff', 12);
+    centerText(ctx, TouchUI.mode ? t('press_tap') : t('press_enter'), cx, 168, '#ffffff', 12);
   }
-  centerText(ctx, t('controls.move'), 240, 196, '#e8e8f8', 9);
-  centerText(ctx, t('controls.actions'), 240, 210, '#e8e8f8', 9);
-  centerText(ctx, t('best', { n: String(g.best).padStart(6, '0') }), 240, 236, '#ffd83d', 10);
-  centerText(ctx, t('cast_line'), 240, 252, '#c8c8e0', 9);
-  drawOptionBar(ctx, g, 392, 4);
+  centerText(ctx, t('controls.move'), cx, 196, '#e8e8f8', 9);
+  centerText(ctx, t('controls.actions'), cx, 210, '#e8e8f8', 9);
+  centerText(ctx, t('best', { n: String(g.best).padStart(6, '0') }), cx, 236, '#ffd83d', 10);
+  centerText(ctx, t('cast_line'), cx, 252, '#c8c8e0', 9);
+  drawOptionBar(ctx, g, view.w - 88, 4);
 }
 
 // ---------------------------------------------------------------- select
 // Carousel: center card + neighbors peeking from both sides.
 export function drawSelect(ctx, g) {
   menuBg(ctx, g);
-  centerText(ctx, t('choose_hero'), 240, 32, '#ffffff', 16);
+  const cx = view.w / 2;
+  centerText(ctx, t('choose_hero'), cx, 32, '#ffffff', 16);
 
   const n = CHARACTERS.length;
   // draw neighbors (behind), then the selected card on top
@@ -143,17 +146,17 @@ export function drawSelect(ctx, g) {
   // nav arrows (tappable in touch mode)
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
   tri(ctx, 14, 132, -1);
-  tri(ctx, 466, 132, 1);
+  tri(ctx, view.w - 14, 132, 1);
   TouchUI.hotspot(0, 108, 40, 48, 'ArrowLeft');
-  TouchUI.hotspot(440, 108, 40, 48, 'ArrowRight');
+  TouchUI.hotspot(view.w - 40, 108, 40, 48, 'ArrowRight');
   // tapping the center card confirms
-  TouchUI.hotspot(165, 46, 150, 168, 'Enter');
+  TouchUI.hotspot(cx - 75, 46, 150, 168, 'Enter');
 
-  centerText(ctx, TouchUI.mode ? t('select_hint_t') : t('select_hint'), 240, 240, '#ffffff', 10);
+  centerText(ctx, TouchUI.mode ? t('select_hint_t') : t('select_hint'), cx, 240, '#ffffff', 10);
   if (!TouchUI.mode) {
-    centerText(ctx, `L  ${otherLang() === 'ar' ? 'عربي' : 'ENGLISH'}`, 240, 256, '#a8b8ff', 9);
+    centerText(ctx, `L  ${otherLang() === 'ar' ? 'عربي' : 'ENGLISH'}`, cx, 256, '#a8b8ff', 9);
   }
-  drawOptionBar(ctx, g, 392, 4);
+  drawOptionBar(ctx, g, view.w - 88, 4);
 }
 
 function tri(ctx, x, y, dir) {
@@ -166,7 +169,7 @@ function tri(ctx, x, y, dir) {
 }
 
 function drawSideCard(ctx, ch, d) {
-  const cx = 240 + d * 148;
+  const cx = view.w / 2 + d * 148;
   ctx.save();
   ctx.globalAlpha = 0.55;
   ctx.fillStyle = 'rgba(0,0,0,0.4)';
@@ -185,7 +188,7 @@ function drawSideCard(ctx, ch, d) {
 }
 
 function drawMainCard(ctx, ch, time) {
-  const x = 165, w = 150, y = 46, h = 168;
+  const x = view.w / 2 - 75, w = 150, y = 46, h = 168;
   ctx.fillStyle = 'rgba(255,255,255,0.16)';
   ctx.fillRect(x, y, w, h);
   ctx.strokeStyle = '#ffd83d';
@@ -231,27 +234,30 @@ function statBar(ctx, label, val, x, y, col) {
 
 // ---------------------------------------------------------------- adv. map
 // Winding path from bottom-left to top-right; hero walks node to node.
-const MAP_NODES = [[52, 198], [148, 168], [240, 146], [332, 112], [414, 82]];
+// x is a fraction of view width (the map stretches on wide screens), y is px.
+const MAP_NODES = [[0.1083, 198], [0.3083, 168], [0.5, 146], [0.6917, 112], [0.8625, 82]];
 const MAP_COLS = ['#5aff8a', '#ffd83d', '#a8b8ff', '#5ab0ff', '#ff8a4e'];
 
 export function drawMap(ctx, g) {
   menuBg(ctx, g);
+  const cx = view.w / 2;
+  const nodes = MAP_NODES.map(([fx, y]) => [fx * view.w, y]);
   ctx.textAlign = 'center';
-  text(ctx, t('map.title'), 240, 24, '#ffd83d', 14);
+  text(ctx, t('map.title'), cx, 24, '#ffd83d', 14);
   ctx.textAlign = 'left';
   text(ctx, t('score', { n: g.score }), 8, 14, '#ffffff', 9);
   ctx.textAlign = 'right';
   if (!TouchUI.mode) { // in touch mode the night icon (same corner) shows this
-    text(ctx, g.night ? t('hud.night') : t('hud.day'), 472, 14,
+    text(ctx, g.night ? t('hud.night') : t('hud.day'), view.w - 8, 14,
       g.night ? '#a8b8ff' : '#ffe14d', 9);
   }
   ctx.textAlign = 'center';
 
   // dashed path
   ctx.fillStyle = 'rgba(255,255,255,0.30)';
-  for (let i = 0; i < MAP_NODES.length - 1; i++) {
-    const [x0, y0] = MAP_NODES[i];
-    const [x1, y1] = MAP_NODES[i + 1];
+  for (let i = 0; i < nodes.length - 1; i++) {
+    const [x0, y0] = nodes[i];
+    const [x1, y1] = nodes[i + 1];
     const n = Math.max(2, Math.floor(Math.hypot(x1 - x0, y1 - y0) / 12));
     for (let k = 1; k < n; k++) {
       ctx.fillRect(x0 + ((x1 - x0) * k) / n, y0 + ((y1 - y0) * k) / n, 3, 3);
@@ -259,17 +265,18 @@ export function drawMap(ctx, g) {
   }
 
   // castle above the final node
+  const lx = nodes[4][0];
   ctx.fillStyle = '#8a90ae';
-  ctx.fillRect(402, 42, 24, 18);
-  ctx.fillRect(400, 36, 5, 8);
-  ctx.fillRect(423, 36, 5, 8);
-  ctx.fillRect(410, 38, 8, 6);
+  ctx.fillRect(lx - 12, 42, 24, 18);
+  ctx.fillRect(lx - 14, 36, 5, 8);
+  ctx.fillRect(lx + 9, 36, 5, 8);
+  ctx.fillRect(lx - 4, 38, 8, 6);
   ctx.fillStyle = '#3a3a52';
-  ctx.fillRect(410, 50, 8, 10);              // door
+  ctx.fillRect(lx - 4, 50, 8, 10);            // door
 
   // stage nodes
-  for (let i = 0; i < MAP_NODES.length; i++) {
-    const [x, y] = MAP_NODES[i];
+  for (let i = 0; i < nodes.length; i++) {
+    const [x, y] = nodes[i];
     const open = i <= g.node || i === g.cursor;
     const cleared = !!g.cleared[i];
     if (i === g.node && !g.mapWalk) {        // frontier pulse
@@ -301,13 +308,13 @@ export function drawMap(ctx, g) {
   let hx, hy, moving = false;
   if (g.mapWalk) {
     const e = g.mapWalk.t * g.mapWalk.t * (3 - 2 * g.mapWalk.t); // smoothstep
-    const [x0, y0] = MAP_NODES[g.mapWalk.from];
-    const [x1, y1] = MAP_NODES[g.mapWalk.to];
+    const [x0, y0] = nodes[g.mapWalk.from];
+    const [x1, y1] = nodes[g.mapWalk.to];
     hx = x0 + (x1 - x0) * e;
     hy = y0 + (y1 - y0) * e;
     moving = true;
   } else {
-    [hx, hy] = MAP_NODES[g.node];
+    [hx, hy] = nodes[g.node];
   }
   ctx.save();
   ctx.translate(hx, hy - 2);
@@ -317,108 +324,113 @@ export function drawMap(ctx, g) {
 
   // selection cursor (idle only)
   if (!g.mapWalk) {
-    const [cx, cy] = MAP_NODES[g.cursor];
+    const [ux, uy] = nodes[g.cursor];
     const bob = Math.abs(Math.sin(g.t * 0.15)) * 4;
     ctx.fillStyle = '#ffd83d';
     ctx.beginPath();
-    ctx.moveTo(cx, cy - 16 - bob);
-    ctx.lineTo(cx - 5, cy - 23 - bob);
-    ctx.lineTo(cx + 5, cy - 23 - bob);
+    ctx.moveTo(ux, uy - 16 - bob);
+    ctx.lineTo(ux - 5, uy - 23 - bob);
+    ctx.lineTo(ux + 5, uy - 23 - bob);
     ctx.closePath();
     ctx.fill();
   }
 
   if (Math.floor(g.t / 24) % 2) {
-    text(ctx, TouchUI.mode ? t('map.hint_t') : t('map.hint'), 240, 262, '#ffffff', 9);
+    text(ctx, TouchUI.mode ? t('map.hint_t') : t('map.hint'), cx, 262, '#ffffff', 9);
   }
-  drawOptionBar(ctx, g, 356, 4); // leaves room for the on-screen Q button
+  drawOptionBar(ctx, g, view.w - 132, 4); // leaves room for the on-screen Q button
 }
 
 // ---------------------------------------------------------------- results
 function dim(ctx, a) {
   ctx.fillStyle = `rgba(0,0,8,${a})`;
-  ctx.fillRect(0, 0, 480, 272);
+  ctx.fillRect(0, 0, view.w, 272);
 }
 
 export function drawClear(ctx, g) {
   dim(ctx, 0.45);
+  const cx = view.w / 2;
   ctx.textAlign = 'center';
-  text(ctx, t('course_clear'), 240, 100, '#5aff8a', 24);
-  text(ctx, t('stage_bonus'), 240, 132, '#ffd83d', 12);
-  text(ctx, t('score', { n: g.score }), 240, 154, '#ffffff', 12);
+  text(ctx, t('course_clear'), cx, 100, '#5aff8a', 24);
+  text(ctx, t('stage_bonus'), cx, 132, '#ffd83d', 12);
+  text(ctx, t('score', { n: g.score }), cx, 154, '#ffffff', 12);
   if (Math.floor(g.t / 24) % 2) {
     centerText(ctx, g.levelIdx + 1 < g.levelCount
       ? (TouchUI.mode ? t('next_stage_t') : t('next_stage'))
-      : (TouchUI.mode ? t('press_tap2') : t('press_enter2')), 240, 190, '#ffffff', 10);
+      : (TouchUI.mode ? t('press_tap2') : t('press_enter2')), cx, 190, '#ffffff', 10);
   }
 }
 
 export function drawGameOver(ctx, g) {
   dim(ctx, 0.6);
+  const cx = view.w / 2;
   ctx.textAlign = 'center';
-  text(ctx, t('game_over'), 240, 110, '#ff5a4e', 26);
-  text(ctx, t('score', { n: g.score }), 240, 140, '#ffffff', 12);
+  text(ctx, t('game_over'), cx, 110, '#ff5a4e', 26);
+  text(ctx, t('score', { n: g.score }), cx, 140, '#ffffff', 12);
   if (TouchUI.mode) {
-    menuCard(ctx, 118, 164, 104, 44, t('pause.retry'), 'Enter');
-    menuCard(ctx, 258, 164, 104, 44, t('pause.quit'), 'Escape');
+    menuCard(ctx, cx - 122, 164, 104, 44, t('pause.retry'), 'Enter');
+    menuCard(ctx, cx + 18, 164, 104, 44, t('pause.quit'), 'Escape');
   } else if (Math.floor(g.t / 24) % 2) {
-    text(ctx, t('retry_hint'), 240, 180, '#ffffff', 10);
+    text(ctx, t('retry_hint'), cx, 180, '#ffffff', 10);
   }
 }
 
 export function drawVictory(ctx, g) {
   menuBg(ctx, g);
+  const cx = view.w / 2;
   const tme = g.t;
   for (let i = 0; i < 30; i++) {
-    const x = (i * 53 + tme * 1.3) % 480;
+    const x = (i * 53 + tme * 1.3) % view.w;
     const y = (i * 97 + tme * 0.7) % 272;
     ctx.fillStyle = ['#ffd83d', '#ff5a4e', '#5aff8a', '#5ab0ff'][i % 4];
     ctx.fillRect(x, y, 3, 3);
   }
   ctx.textAlign = 'center';
-  text(ctx, t('thanks'), 240, 56, '#ffd83d', 28);
-  text(ctx, t('kingdom_saved'), 240, 76, '#ffffff', 13);
+  text(ctx, t('thanks'), cx, 56, '#ffd83d', 28);
+  text(ctx, t('kingdom_saved'), cx, 76, '#ffffff', 13);
   // hero holding the trophy overhead
   const bob = Math.sin(tme * 0.08) * 2;
-  drawTrophy(ctx, 234, 114 + bob, tme);
+  drawTrophy(ctx, cx - 6, 114 + bob, tme);
   ctx.save();
-  ctx.translate(240, 130 + bob * 0.5);
+  ctx.translate(cx, 130 + bob * 0.5);
   ctx.scale(2, 2);
   drawHero(ctx, g.char, -6, 0, 1, false, true, tme);
   ctx.restore();
-  text(ctx, t('final_score', { n: g.score }), 240, 186, '#ffffff', 14);
-  text(ctx, t('best', { n: String(g.best).padStart(6, '0') }), 240, 202, '#ffd83d', 10);
-  text(ctx, `${t('coins', { n: g.coins })}      ${t('mode', { m: g.night ? t('hud.night') : t('hud.day') })}`, 240, 216, '#c8c8e0', 10);
+  text(ctx, t('final_score', { n: g.score }), cx, 186, '#ffffff', 14);
+  text(ctx, t('best', { n: String(g.best).padStart(6, '0') }), cx, 202, '#ffd83d', 10);
+  text(ctx, `${t('coins', { n: g.coins })}      ${t('mode', { m: g.night ? t('hud.night') : t('hud.day') })}`, cx, 216, '#c8c8e0', 10);
   if (Math.floor(tme / 24) % 2) {
-    text(ctx, TouchUI.mode ? t('title_back_t') : t('title_back'), 240, 244, '#ffffff', 10);
+    text(ctx, TouchUI.mode ? t('title_back_t') : t('title_back'), cx, 244, '#ffffff', 10);
   }
 }
 
 export function drawIntro(ctx, g) {
   const a = Math.min(1, g.introT / 30, (120 - g.introT) / 30);
   if (a <= 0) return;
+  const cx = view.w / 2;
   ctx.globalAlpha = a;
   ctx.fillStyle = 'rgba(0,0,8,0.55)';
-  ctx.fillRect(0, 100, 480, 52);
+  ctx.fillRect(0, 100, view.w, 52);
   ctx.textAlign = 'center';
-  text(ctx, t('level', { n: g.levelIdx + 1, name: t(g.level.nameKey) }), 240, 124, '#ffffff', 15);
-  text(ctx, g.night ? t('intro.night') : t('intro.day'), 240, 142, '#a8b8ff', 9);
+  text(ctx, t('level', { n: g.levelIdx + 1, name: t(g.level.nameKey) }), cx, 124, '#ffffff', 15);
+  text(ctx, g.night ? t('intro.night') : t('intro.day'), cx, 142, '#a8b8ff', 9);
   ctx.globalAlpha = 1;
 }
 
 export function drawPause(ctx, g) {
   dim(ctx, 0.5);
+  const cx = view.w / 2;
   ctx.textAlign = 'center';
   if (TouchUI.mode) {
-    text(ctx, t('paused'), 240, 72, '#ffffff', 22);
-    menuCard(ctx, 60, 100, 104, 44, t('pause.resume'), 'Escape');
-    menuCard(ctx, 188, 100, 104, 44, t('pause.retry'), 'KeyR');
-    menuCard(ctx, 316, 100, 104, 44, t('pause.quit'), 'KeyQ');
+    text(ctx, t('paused'), cx, 72, '#ffffff', 22);
+    menuCard(ctx, cx - 180, 100, 104, 44, t('pause.resume'), 'Escape');
+    menuCard(ctx, cx - 52, 100, 104, 44, t('pause.retry'), 'KeyR');
+    menuCard(ctx, cx + 76, 100, 104, 44, t('pause.quit'), 'KeyQ');
     // option icons centered under the cards (corners stay free for the
     // on-screen pause/quit buttons)
-    drawOptionBar(ctx, g, 200, 158);
+    drawOptionBar(ctx, g, cx - 40, 158);
   } else {
-    text(ctx, t('paused'), 240, 130, '#ffffff', 22);
-    text(ctx, t('pause_hint'), 240, 158, '#c8c8e0', 9);
+    text(ctx, t('paused'), cx, 130, '#ffffff', 22);
+    text(ctx, t('pause_hint'), cx, 158, '#c8c8e0', 9);
   }
 }

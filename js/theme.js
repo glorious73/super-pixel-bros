@@ -86,29 +86,32 @@ export function mulberry32(seed) {
   };
 }
 
+import { view } from './view.js';
+
 export function drawBackdrop(ctx, pal, mix, themeIdx, camX, t) {
+  const W = view.w;
   const g = ctx.createLinearGradient(0, 0, 0, 272);
   g.addColorStop(0, pal.sky1);
   g.addColorStop(1, pal.sky2);
   ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 480, 272);
+  ctx.fillRect(0, 0, W, 272);
 
   // stars at night
   if (mix > 0.02) {
     const rnd = mulberry32(77);
     ctx.fillStyle = '#ffffff';
     for (let i = 0; i < 50; i++) {
-      const x = (rnd() * 480 - camX * 0.05) % 480;
+      const x = (rnd() * W - camX * 0.05) % W;
       const y = rnd() * 140;
       const tw = 0.4 + 0.6 * Math.abs(Math.sin(t * 0.02 + i));
       ctx.globalAlpha = mix * tw * 0.9;
-      ctx.fillRect((x + 480) % 480, y, 1 + (i % 3 === 0 ? 1 : 0), 1);
+      ctx.fillRect((x + W) % W, y, 1 + (i % 3 === 0 ? 1 : 0), 1);
     }
     ctx.globalAlpha = 1;
   }
 
   // sun (fades out) / moon (fades in)
-  const sunX = 400, moonX = 400, cy = 48;
+  const sunX = W - 80, moonX = W - 80, cy = 48;
   if (mix < 0.98) {
     ctx.globalAlpha = 1 - mix;
     ctx.fillStyle = pal.sun;
@@ -154,12 +157,12 @@ function hillLayer(ctx, color, off, base, amp, period) {
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.moveTo(0, 272);
-  for (let x = 0; x <= 480; x += 8) {
+  for (let x = 0; x <= view.w; x += 8) {
     const h = base - (Math.sin((x + off) / period * Math.PI * 2) * 0.5 + 0.5) * amp
       - (Math.sin((x + off) / (period * 0.37) * Math.PI * 2) * 0.25) * amp;
     ctx.lineTo(x, h);
   }
-  ctx.lineTo(480, 272);
+  ctx.lineTo(view.w, 272);
   ctx.closePath();
   ctx.fill();
 }

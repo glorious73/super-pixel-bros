@@ -38,6 +38,7 @@ const Game = (await import(`${base}/game.js`)).default;
 const i18n = await import(`${base}/i18n.js`);
 const Input = (await import(`${base}/input.js`)).default;
 const TouchUI = (await import(`${base}/touchui.js`)).default;
+const { view, fitView } = await import(`${base}/view.js`);
 const { CHARACTERS } = await import(`${base}/entities.js`);
 const { LEVEL_COUNT } = await import(`${base}/levels.js`);
 
@@ -144,6 +145,44 @@ function tap(g, code) {
   if (gest.type !== 'none') throw new Error('vertical drag must not swipe');
   TouchUI.setMode(false);
   console.log('touch UI (hot spots, cards, gestures) OK');
+}
+
+// wide viewport: fitView math + every screen renders & hits at 640 wide
+{
+  if (fitView(1560, 676) !== 624) throw new Error('2.3:1 phone should give 624, got ' + view.w);
+  if (fitView(1920, 480) !== 640) throw new Error('ultrawide should clamp to 640');
+  if (fitView(480, 272) !== 480) throw new Error('16:9 box should stay 480');
+  view.w = 640;
+
+  TouchUI.setMode(true);
+  const hit = (x, y) => TouchUI.hitTest(x, y);
+  const g = new Game();
+  g.render(ctx);                                     // title @640
+  if (hit(564, 16) !== 'KeyM' || hit(620, 16) !== 'KeyL')
+    throw new Error('option bar did not follow view width (title)');
+  g.state = 'select';
+  g.render(ctx);
+  if (hit(620, 132) !== 'ArrowRight') throw new Error('right arrow stuck at 480');
+  if (hit(320, 130) !== 'Enter') throw new Error('center card not centered @640');
+  g.startRun();                                      // map
+  g.render(ctx);
+  if (hit(0.8625 * 640, 82) !== 'Node4') throw new Error('map nodes not stretched');
+  g.loadLevel(0);
+  g.state = 'pause';
+  g.render(ctx);
+  if (hit(192, 122) !== 'Escape' || hit(320, 122) !== 'KeyR' || hit(448, 122) !== 'KeyQ')
+    throw new Error('pause cards not centered @640');
+  if (hit(292, 170) !== 'KeyM' || hit(348, 170) !== 'KeyL')
+    throw new Error('pause option bar not centered @640');
+  g.state = 'gameover';
+  g.render(ctx);
+  if (hit(250, 186) !== 'Enter' || hit(390, 186) !== 'Escape')
+    throw new Error('game over cards not centered @640');
+  g.state = 'clear'; g.render(ctx);
+  g.state = 'victory'; g.render(ctx);
+  TouchUI.setMode(false);
+  view.w = 480;
+  console.log('wide viewport (fitView + 640-wide layout) OK');
 }
 
 for (const lang of ['en', 'ar']) {

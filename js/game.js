@@ -3,7 +3,8 @@ import Input from './input.js';
 import TouchUI from './touchui.js';
 import audio from './audio.js';
 import { toggleLang } from './i18n.js';
-import { parseLevel, LEVEL_COUNT, T, VIEW_W, VIEW_H } from './levels.js';
+import { parseLevel, LEVEL_COUNT, T } from './levels.js';
+import { view } from './view.js';
 import { CHARACTERS, Player, Shell, spawnEnemy, overlaps } from './entities.js';
 import { drawWorld, drawHUD } from './renderer.js';
 import {
@@ -351,8 +352,8 @@ export default class Game {
     this.bumps = this.bumps.filter((b) => b.t > 0);
 
     // camera
-    const tx = pl.x + pl.w / 2 - VIEW_W * 0.45 + pl.vx * 10;
-    this.cam.x += (Math.max(0, Math.min(tx, this.w * T - VIEW_W)) - this.cam.x) * 0.12;
+    const tx = pl.x + pl.w / 2 - view.w * 0.45 + pl.vx * 10;
+    this.cam.x += (Math.max(0, Math.min(tx, this.w * T - view.w)) - this.cam.x) * 0.12;
 
     // flag / death / resolution
     if (!pl.dying && this.checkFlag()) {

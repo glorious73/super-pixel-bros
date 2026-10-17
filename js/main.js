@@ -3,28 +3,34 @@ import Game from './game.js';
 import Input from './input.js';
 import TouchUI from './touchui.js';
 import audio from './audio.js';
-import { VIEW_W, VIEW_H } from './levels.js';
+import { view, fitView, VIEW_H } from './view.js';
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
-canvas.width = VIEW_W;
+canvas.width = view.w;
 canvas.height = VIEW_H;
 
 // Fit mode (default): canvas fills the window at fractional scale.
 // Press F for pixel-perfect integer scaling. Persisted.
+const isTouchDevice = matchMedia('(hover: none) and (pointer: coarse)').matches;
 const footer = document.querySelector('footer');
 let fit = localStorage.getItem('pixelbros_fit') !== '0';
 
 function resize() {
+  const m = isTouchDevice ? 4 : 16; // phones: every pixel of scale counts
   const fh = footer ? footer.offsetHeight + 12 : 34;
-  const raw = Math.min(
-    (window.innerWidth - 16) / VIEW_W,
-    (window.innerHeight - fh - 16) / VIEW_H,
-  );
+  const availW = window.innerWidth - m;
+  const availH = window.innerHeight - fh - m;
+  fitView(availW, availH); // widen the view on wide screens (480-640)
+  if (canvas.width !== view.w) {
+    canvas.width = view.w; // resizing clears canvas state
+    ctx.imageSmoothingEnabled = false;
+  }
+  const raw = Math.min(availW / view.w, availH / VIEW_H);
   let f = fit ? raw : Math.floor(raw);
   if (f < 1) f = raw; // tiny windows always fall back to fit
-  canvas.style.width = Math.round(VIEW_W * f) + 'px';
+  canvas.style.width = Math.round(view.w * f) + 'px';
   canvas.style.height = Math.round(VIEW_H * f) + 'px';
 }
 addEventListener('resize', resize);
@@ -39,13 +45,21 @@ addEventListener('keydown', (e) => {
 });
 
 // ------------------------------------------------------------ touch controls
-// On-screen gamepad: ◀ ▶ + jump, pause button, and a title button that
-// appears when the pause/map states offer it (via body[data-state]).
+// On-screen gamepad: ◀ ▶ + jump / pause buttons (menus run on canvas UI).
 // Auto-enabled on coarse-pointer devices; T toggles and persists.
-const isTouchDevice = matchMedia('(hover: none) and (pointer: coarse)').matches;
 let touchOn = localStorage.getItem('pixelbros_touch');
 if (touchOn === null) touchOn = isTouchDevice ? '1' : '0';
 applyTouch(touchOn === '1');
+
+// Phone in a browser tab: the first tap goes fullscreen, hiding Chrome's
+// toolbars (no-op on iOS / desktop). Installed PWAs skip this — their
+// manifest already requests fullscreen display.
+if (isTouchDevice && !matchMedia('(display-mode: standalone)').matches) {
+  addEventListener('pointerdown', () => {
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+  }, { once: true });
+}
 
 function applyTouch(on) {
   document.body.classList.toggle('touch', on);
@@ -90,7 +104,7 @@ addEventListener('keydown', unlock);
 function toCanvas(e) {
   const r = canvas.getBoundingClientRect();
   return {
-    x: ((e.clientX - r.left) / r.width) * VIEW_W,
+    x: ((e.clientX - r.left) / r.width) * view.w,
     y: ((e.clientY - r.top) / r.height) * VIEW_H,
   };
 }

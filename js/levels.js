@@ -4,8 +4,7 @@
 //   'g' goomba  'k' koopa  'f' flyer  's' spiny (spawn markers, cleared on parse)
 
 export const T = 16;
-export const VIEW_W = 480;
-export const VIEW_H = 272; // 17 tiles
+// View size lives in view.js (view.w adapts 480-640, height fixed 272).
 export const ROWS = 17;
 
 export const SOLID = new Set(['#', 'B', '?', 'x', 'P']);

@@ -1,5 +1,6 @@
 // Draws the game world: tiles, platforms, entities, player, HUD.
 import { T } from './levels.js';
+import { view } from './view.js';
 import { t, isArabic } from './i18n.js';
 import { palette, drawBackdrop } from './theme.js';
 import {
@@ -52,13 +53,13 @@ export function drawWorld(ctx, g) {
   // night tint ties everything together (caves already dark)
   if (g.level.theme !== 2 && g.nightMix > 0.02) {
     ctx.fillStyle = `rgba(8,14,46,${0.22 * g.nightMix})`;
-    ctx.fillRect(0, 0, 480, 272);
+    ctx.fillRect(0, 0, view.w, 272);
   }
 }
 
 function drawTiles(ctx, g, pal) {
   const x0 = Math.max(0, Math.floor(g.cam.x / T));
-  const x1 = Math.min(g.w - 1, x0 + 31);
+  const x1 = Math.min(g.w - 1, x0 + Math.ceil(view.w / T));
   for (let ty = 0; ty < g.h; ty++) {
     for (let tx = x0; tx <= x1; tx++) {
       const ch = g.rows[ty][tx];
@@ -212,8 +213,9 @@ function drawEnemy(ctx, e, t) {
 
 // ---------------------------------------------------------------- HUD
 export function drawHUD(ctx, g) {
+  const W = view.w;
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.fillRect(0, 0, 480, 18);
+  ctx.fillRect(0, 0, W, 18);
   ctx.textAlign = 'left';
   text(ctx, t('hud.score', { n: String(g.score).padStart(6, '0') }), 8, 13, '#ffffff', 9);
   ctx.fillStyle = '#f8c81c';
@@ -222,11 +224,11 @@ export function drawHUD(ctx, g) {
   ctx.fillRect(119, 7, 2, 2);
   text(ctx, `x${g.coins}`, 128, 13, '#ffffff', 9);
   ctx.textAlign = 'center';
-  text(ctx, t('level', { n: g.levelIdx + 1, name: t(g.level.nameKey) }), 240, 13, '#ffffff', 9);
+  text(ctx, t('level', { n: g.levelIdx + 1, name: t(g.level.nameKey) }), W / 2, 13, '#ffffff', 9);
   ctx.textAlign = 'right';
-  for (let i = 0; i < g.lives; i++) heart(ctx, 320 + i * 12, 5, g.player.ch.color);
-  text(ctx, g.night ? t('hud.night') : t('hud.day'), 470, 10, g.night ? '#a8b8ff' : '#ffe14d', 9);
-  text(ctx, g.muted ? t('hud.sound_off') : t('hud.sound_on'), 470, 17, '#c8c8d8', 9);
+  for (let i = 0; i < g.lives; i++) heart(ctx, W - 160 + i * 12, 5, g.player.ch.color);
+  text(ctx, g.night ? t('hud.night') : t('hud.day'), W - 10, 10, g.night ? '#a8b8ff' : '#ffe14d', 9);
+  text(ctx, g.muted ? t('hud.sound_off') : t('hud.sound_on'), W - 10, 17, '#c8c8d8', 9);
 }
 
 function heart(ctx, x, y, col) {

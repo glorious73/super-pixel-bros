@@ -66,6 +66,7 @@ and has caught real soft-locks before (a pipe taller than the player's jump).
 | `js/audio.js` | Web Audio synth: SFX + per-level looping melodies (night = octave down, slower, triangle) |
 | `js/input.js` | keyboard state + edge-triggered `pressed()` (cleared each rAF frame); `press`/`release`/`tap` for virtual keys |
 | `js/touchui.js` | canvas tap hot spots, tap/swipe gesture recognizer, touch-mode flag |
+| `js/view.js` | runtime view size: height fixed 272, width 480→640 on wide screens (all drawing anchors on `view.w`) |
 | `sw.js` + `manifest.webmanifest` | PWA service worker (versioned app-shell precache; bump `VERSION` on any change) + install manifest |
 | `icons/` | app icons — generated PNGs, regenerate with `node tools/gen-icons.mjs` |
 
@@ -130,11 +131,16 @@ and has caught real soft-locks before (a pipe taller than the player's jump).
 - Best score, mute, day/night and scaling prefs persist via `localStorage`
   (`pixelbros_best`, `pixelbros_mute`, `pixelbros_night`, `pixelbros_fit`,
   `pixelbros_touch`).
-- The canvas renders at 480×272 and is scaled by CSS with
-  `image-rendering: pixelated`. `resize()` in `main.js` fills the window at a
-  fractional scale by default (fit mode); **F** toggles pixel-perfect integer
-  scaling (floor factor, falls back to fit below 1). Never enlarge the
-  internal resolution to "fix" blurriness.
+- The canvas renders at **272px tall; width adapts** — `js/view.js` keeps
+  `view.w` at 480 minimum, up to 640 (tile-snapped) on wide screens, so a
+  landscape phone fills the width instead of showing black bars (more world
+  visible, physics identical). All drawing anchors on `view.w`, never on
+  hardcoded 480/240. Scaled by CSS with `image-rendering: pixelated`;
+  `resize()` in `main.js` fills the window at a fractional scale (fit mode);
+  **F** toggles pixel-perfect integer scaling (floor factor, falls back to
+  fit below 1). Never enlarge the internal resolution past 640×272 or make
+  it taller to "fix" blurriness. Phones also get: footer hidden, 4px
+  margins, fullscreen first tap (browser) / fullscreen display (PWA).
 
 ## Conventions
 
