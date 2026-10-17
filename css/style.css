@@ -4,7 +4,12 @@ html, body {
   height: 100%;
   background: #0a0a12;
   overflow: hidden;
+  overscroll-behavior: none; /* no pull-to-refresh / edge bounce */
   font-family: "Courier New", monospace;
+}
+
+@supports (height: 100dvh) {
+  html, body { height: 100dvh; } /* correct height in mobile chrome UI */
 }
 
 body {
@@ -80,16 +85,30 @@ body.touch #touch { display: block; }
   width: 34px;
   height: 34px;
   font-size: 13px;
-  top: 6px;
+  top: calc(6px + env(safe-area-inset-top));
   opacity: 0.85;
 }
 
-#btnL { left: 12px; bottom: 12px; }
-#btnR { left: 82px; bottom: 12px; }
-#btnJump { right: 12px; bottom: 12px; width: 68px; height: 68px; }
-#btnPause { right: 8px; }
-#btnTitle { right: 48px; display: none; }
+/* notch-safe placement */
+#btnL { left: calc(12px + env(safe-area-inset-left)); bottom: calc(12px + env(safe-area-inset-bottom)); }
+#btnR { left: calc(82px + env(safe-area-inset-left)); bottom: calc(12px + env(safe-area-inset-bottom)); }
+#btnJump { right: calc(12px + env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); width: 68px; height: 68px; }
+#btnPause { right: calc(8px + env(safe-area-inset-right)); }
+#btnTitle { right: 48px; }
 
+/* Show only the buttons the current state needs: menus run on canvas UI
+   (hot spots + swipe), so the gamepad appears only during play/pause;
+   the map screen only offers the on-screen Q. */
+#touch .tbtn { display: none; }
+
+body.touch[data-state="play"] #btnL,
+body.touch[data-state="play"] #btnR,
+body.touch[data-state="play"] #btnJump,
+body.touch[data-state="play"] #btnPause,
+body.touch[data-state="pause"] #btnL,
+body.touch[data-state="pause"] #btnR,
+body.touch[data-state="pause"] #btnJump,
+body.touch[data-state="pause"] #btnPause,
 body.touch[data-state="pause"] #btnTitle,
 body.touch[data-state="map"] #btnTitle { display: flex; }
 

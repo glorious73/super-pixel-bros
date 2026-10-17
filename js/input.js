@@ -1,6 +1,7 @@
 // Keyboard input: held state + edge-triggered "pressed" lookups.
 const held = new Set();
 const pressedSet = new Set();
+const tapped = new Set(); // auto-released in endFrame (canvas button taps)
 
 const BLOCK_DEFAULT = new Set([
   'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'Enter',
@@ -25,14 +26,17 @@ const Input = {
     held.add(code);
   },
   release(code) { held.delete(code); },
-  // treat a mouse click/tap on the canvas as Enter
-  touchConfirm() {
-    if (!held.has('Enter')) pressedSet.add('Enter');
-    held.add('Enter');
-    setTimeout(() => held.delete('Enter'), 60);
+  // one-shot key press (canvas taps): fires `pressed` once, auto-released
+  // at endFrame so taps never leak held state into the next frame
+  tap(code) {
+    if (!held.has(code)) pressedSet.add(code);
+    held.add(code);
+    tapped.add(code);
   },
   endFrame() {
     pressedSet.clear();
+    for (const c of tapped) held.delete(c);
+    tapped.clear();
   },
 };
 

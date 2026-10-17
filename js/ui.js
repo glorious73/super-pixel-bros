@@ -4,7 +4,8 @@ import { drawHero, drawTrophy } from './sprites.js';
 import { text } from './renderer.js';
 import { CHARACTERS } from './entities.js';
 import { NAME_KEYS } from './levels.js';
-import { t, isArabic, otherLang } from './i18n.js';
+import { t, isArabic, otherLang, getLang } from './i18n.js';
+import TouchUI from './touchui.js';
 
 function menuBg(ctx, g) {
   const pal = palette(0, g.nightMix);
@@ -14,6 +15,85 @@ function menuBg(ctx, g) {
 function centerText(ctx, str, x, y, col, size) {
   ctx.textAlign = 'center';
   text(ctx, str, x, y, col, size);
+}
+
+// ---------------------------------------------------------------- touch bits
+// Option buttons inject the same key codes as the physical M / N / L keys,
+// so game logic stays keyboard-driven (one input pipeline, testable headless).
+
+function optBtn(ctx, x, y, hot, bgFill, drawFn) {
+  ctx.fillStyle = bgFill;
+  ctx.fillRect(x, y, 24, 24);
+  ctx.strokeStyle = hot ? '#ffd83d' : 'rgba(255,255,255,0.45)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 0.5, y + 0.5, 23, 23);
+  drawFn(x, y);
+}
+
+// Mute / day-night / language icon row. `x, y` is the top-left corner;
+// screens place it away from any DOM buttons sharing the same corner.
+function drawOptionBar(ctx, g, x, y) {
+  if (!TouchUI.mode) return;
+  const s = 24, gap = 4;
+  const x0 = x; // icon row anchor (left edge)
+  const bg = 'rgba(10,10,22,0.55)';
+
+  let hot = g.muted;
+  optBtn(ctx, x0, y, hot, hot ? 'rgba(255,216,61,0.28)' : bg, (bx, by) => {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(bx + 5, by + 10, 4, 4);   // speaker back
+    ctx.fillRect(bx + 9, by + 7, 2, 10);   // cone steps
+    ctx.fillRect(bx + 11, by + 5, 2, 14);
+    ctx.fillStyle = hot ? '#ff5a4e' : '#5aff8a';
+    if (hot) {                              // red X
+      for (let i = 0; i < 6; i++) {
+        ctx.fillRect(bx + 15 + i, by + 9 + i, 2, 2);
+        ctx.fillRect(bx + 20 - i, by + 9 + i, 2, 2);
+      }
+    } else {                                // sound waves
+      ctx.fillRect(bx + 16, by + 8, 2, 8);
+      ctx.fillRect(bx + 20, by + 6, 2, 12);
+    }
+  });
+  TouchUI.hotspot(x0 - 4, y - 4, s + 8, s + 8, 'KeyM');
+
+  hot = g.night;
+  const bg2 = hot ? 'rgba(255,216,61,0.28)' : bg;
+  optBtn(ctx, x0 + s + gap, y, hot, bg2, (bx, by) => {
+    const cx = bx + 12, cy = by + 12;
+    ctx.fillStyle = '#ffe14d';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+    ctx.fill();
+    if (hot) {                              // bite -> crescent moon
+      ctx.fillStyle = bg2;
+      ctx.beginPath();
+      ctx.arc(cx + 3.5, cy - 2, 6, 0, Math.PI * 2);
+      ctx.fill();
+    } else {                                // rays -> sun
+      ctx.fillRect(cx - 1, by + 1, 2, 3);
+      ctx.fillRect(cx - 1, by + 20, 2, 3);
+      ctx.fillRect(bx + 1, cy - 1, 3, 2);
+      ctx.fillRect(bx + 20, cy - 1, 3, 2);
+    }
+  });
+  TouchUI.hotspot(x0 + s + gap - 4, y - 4, s + 8, s + 8, 'KeyN');
+
+  optBtn(ctx, x0 + (s + gap) * 2, y, false, bg, (bx, by) => {
+    centerText(ctx, getLang() === 'ar' ? 'ع' : 'EN', bx + 12, by + 16, '#a8b8ff', 11);
+  });
+  TouchUI.hotspot(x0 + (s + gap) * 2 - 4, y - 4, s + 8, s + 8, 'KeyL');
+}
+
+// A tappable menu card (pause / game-over screens).
+function menuCard(ctx, x, y, w, h, label, code) {
+  ctx.fillStyle = 'rgba(28,30,58,0.92)';
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = 'rgba(255,216,61,0.85)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+  centerText(ctx, label, x + w / 2, y + h / 2 + 4, '#ffffff', 12);
+  TouchUI.hotspot(x, y, w, h, code);
 }
 
 export function drawTitle(ctx, g) {
@@ -26,12 +106,13 @@ export function drawTitle(ctx, g) {
   text(ctx, t('app.title').split(' ').slice(1).join(' '), 240, 115 + bob, '#ffb0a0', 34);
 
   if (Math.floor(g.t / 30) % 2) {
-    centerText(ctx, t('press_enter'), 240, 168, '#ffffff', 12);
+    centerText(ctx, TouchUI.mode ? t('press_tap') : t('press_enter'), 240, 168, '#ffffff', 12);
   }
   centerText(ctx, t('controls.move'), 240, 196, '#e8e8f8', 9);
   centerText(ctx, t('controls.actions'), 240, 210, '#e8e8f8', 9);
   centerText(ctx, t('best', { n: String(g.best).padStart(6, '0') }), 240, 236, '#ffd83d', 10);
   centerText(ctx, t('cast_line'), 240, 252, '#c8c8e0', 9);
+  drawOptionBar(ctx, g, 392, 4);
 }
 
 // ---------------------------------------------------------------- select
@@ -59,13 +140,20 @@ export function drawSelect(ctx, g) {
     else drawMainCard(ctx, ch, g.t);
   }
 
-  // nav arrows
+  // nav arrows (tappable in touch mode)
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
   tri(ctx, 14, 132, -1);
   tri(ctx, 466, 132, 1);
+  TouchUI.hotspot(0, 108, 40, 48, 'ArrowLeft');
+  TouchUI.hotspot(440, 108, 40, 48, 'ArrowRight');
+  // tapping the center card confirms
+  TouchUI.hotspot(165, 46, 150, 168, 'Enter');
 
-  centerText(ctx, t('select_hint'), 240, 240, '#ffffff', 10);
-  centerText(ctx, `L  ${otherLang() === 'ar' ? 'عربي' : 'ENGLISH'}`, 240, 256, '#a8b8ff', 9);
+  centerText(ctx, TouchUI.mode ? t('select_hint_t') : t('select_hint'), 240, 240, '#ffffff', 10);
+  if (!TouchUI.mode) {
+    centerText(ctx, `L  ${otherLang() === 'ar' ? 'عربي' : 'ENGLISH'}`, 240, 256, '#a8b8ff', 9);
+  }
+  drawOptionBar(ctx, g, 392, 4);
 }
 
 function tri(ctx, x, y, dir) {
@@ -153,8 +241,10 @@ export function drawMap(ctx, g) {
   ctx.textAlign = 'left';
   text(ctx, t('score', { n: g.score }), 8, 14, '#ffffff', 9);
   ctx.textAlign = 'right';
-  text(ctx, g.night ? t('hud.night') : t('hud.day'), 472, 14,
-    g.night ? '#a8b8ff' : '#ffe14d', 9);
+  if (!TouchUI.mode) { // in touch mode the night icon (same corner) shows this
+    text(ctx, g.night ? t('hud.night') : t('hud.day'), 472, 14,
+      g.night ? '#a8b8ff' : '#ffe14d', 9);
+  }
   ctx.textAlign = 'center';
 
   // dashed path
@@ -204,6 +294,7 @@ export function drawMap(ctx, g) {
       ctx.fillRect(x + 9, y - 14, 6, 4);
     }
     text(ctx, t(NAME_KEYS[i]), x, y + 22, open ? '#ffffff' : '#8888a8', 7);
+    if (!g.mapWalk) TouchUI.hotspot(x - 15, y - 15, 30, 30, 'Node' + i);
   }
 
   // hero: standing on frontier node, or walking along the path
@@ -238,8 +329,9 @@ export function drawMap(ctx, g) {
   }
 
   if (Math.floor(g.t / 24) % 2) {
-    text(ctx, t('map.hint'), 240, 262, '#ffffff', 9);
+    text(ctx, TouchUI.mode ? t('map.hint_t') : t('map.hint'), 240, 262, '#ffffff', 9);
   }
+  drawOptionBar(ctx, g, 356, 4); // leaves room for the on-screen Q button
 }
 
 // ---------------------------------------------------------------- results
@@ -255,7 +347,9 @@ export function drawClear(ctx, g) {
   text(ctx, t('stage_bonus'), 240, 132, '#ffd83d', 12);
   text(ctx, t('score', { n: g.score }), 240, 154, '#ffffff', 12);
   if (Math.floor(g.t / 24) % 2) {
-    text(ctx, g.levelIdx + 1 < g.levelCount ? t('next_stage') : t('press_enter2'), 240, 190, '#ffffff', 10);
+    centerText(ctx, g.levelIdx + 1 < g.levelCount
+      ? (TouchUI.mode ? t('next_stage_t') : t('next_stage'))
+      : (TouchUI.mode ? t('press_tap2') : t('press_enter2')), 240, 190, '#ffffff', 10);
   }
 }
 
@@ -264,7 +358,10 @@ export function drawGameOver(ctx, g) {
   ctx.textAlign = 'center';
   text(ctx, t('game_over'), 240, 110, '#ff5a4e', 26);
   text(ctx, t('score', { n: g.score }), 240, 140, '#ffffff', 12);
-  if (Math.floor(g.t / 24) % 2) {
+  if (TouchUI.mode) {
+    menuCard(ctx, 118, 164, 104, 44, t('pause.retry'), 'Enter');
+    menuCard(ctx, 258, 164, 104, 44, t('pause.quit'), 'Escape');
+  } else if (Math.floor(g.t / 24) % 2) {
     text(ctx, t('retry_hint'), 240, 180, '#ffffff', 10);
   }
 }
@@ -293,7 +390,7 @@ export function drawVictory(ctx, g) {
   text(ctx, t('best', { n: String(g.best).padStart(6, '0') }), 240, 202, '#ffd83d', 10);
   text(ctx, `${t('coins', { n: g.coins })}      ${t('mode', { m: g.night ? t('hud.night') : t('hud.day') })}`, 240, 216, '#c8c8e0', 10);
   if (Math.floor(tme / 24) % 2) {
-    text(ctx, t('title_back'), 240, 244, '#ffffff', 10);
+    text(ctx, TouchUI.mode ? t('title_back_t') : t('title_back'), 240, 244, '#ffffff', 10);
   }
 }
 
@@ -312,6 +409,16 @@ export function drawIntro(ctx, g) {
 export function drawPause(ctx, g) {
   dim(ctx, 0.5);
   ctx.textAlign = 'center';
-  text(ctx, t('paused'), 240, 130, '#ffffff', 22);
-  text(ctx, t('pause_hint'), 240, 158, '#c8c8e0', 9);
+  if (TouchUI.mode) {
+    text(ctx, t('paused'), 240, 72, '#ffffff', 22);
+    menuCard(ctx, 60, 100, 104, 44, t('pause.resume'), 'Escape');
+    menuCard(ctx, 188, 100, 104, 44, t('pause.retry'), 'KeyR');
+    menuCard(ctx, 316, 100, 104, 44, t('pause.quit'), 'KeyQ');
+    // option icons centered under the cards (corners stay free for the
+    // on-screen pause/quit buttons)
+    drawOptionBar(ctx, g, 200, 158);
+  } else {
+    text(ctx, t('paused'), 240, 130, '#ffffff', 22);
+    text(ctx, t('pause_hint'), 240, 158, '#c8c8e0', 9);
+  }
 }

@@ -1,5 +1,6 @@
 // Core game: state machine, world simulation, collisions, scoring.
 import Input from './input.js';
+import TouchUI from './touchui.js';
 import audio from './audio.js';
 import { toggleLang } from './i18n.js';
 import { parseLevel, LEVEL_COUNT, T, VIEW_W, VIEW_H } from './levels.js';
@@ -205,6 +206,11 @@ export default class Game {
         break;
       case 'pause':
         if (this.input.pressed('Escape')) this.state = 'play';
+        // Retry card / R: die on the spot (costs a life, same as in-game R)
+        if (this.input.pressed('KeyR')) {
+          this.state = 'play';
+          this.player.hurt(this, true);
+        }
         if (this.input.pressed('KeyQ')) {
           this.saveBest(); // abandoning the run, but keep the record
           this.state = 'title'; this.sfx('confirm');
@@ -275,10 +281,19 @@ export default class Game {
       this.saveBest();
       this.state = 'title'; this.sfx('confirm');
     }
-    if (this.input.pressed('Enter')) {
-      this.loadLevel(this.cursor);
-      this.state = 'play'; this.sfx('confirm');
+    // direct node taps (hot spot codes 'Node<i>'): tapping an open node
+    // selects it; tapping the already-selected node launches the stage
+    for (let i = 0; i <= this.node; i++) {
+      if (!this.input.pressed('Node' + i)) continue;
+      if (i === this.cursor) { this.startCursorStage(); return; }
+      this.cursor = i; this.sfx('select');
     }
+    if (this.input.pressed('Enter')) this.startCursorStage();
+  }
+
+  startCursorStage() {
+    this.loadLevel(this.cursor);
+    this.state = 'play'; this.sfx('confirm');
   }
 
   updatePlay() {
@@ -419,6 +434,7 @@ export default class Game {
 
   // ------------------------------------------------------------ render
   render(ctx) {
+    TouchUI.beginDraw(); // screens re-register their hot spots while drawing
     switch (this.state) {
       case 'title': drawTitle(ctx, this); break;
       case 'select': drawSelect(ctx, this); break;

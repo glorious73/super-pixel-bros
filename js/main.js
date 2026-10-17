@@ -1,6 +1,7 @@
 // Bootstrap: canvas, integer scaling, fixed-timestep loop, touch controls.
 import Game from './game.js';
 import Input from './input.js';
+import TouchUI from './touchui.js';
 import audio from './audio.js';
 import { VIEW_W, VIEW_H } from './levels.js';
 
@@ -48,6 +49,7 @@ applyTouch(touchOn === '1');
 
 function applyTouch(on) {
   document.body.classList.toggle('touch', on);
+  TouchUI.setMode(on);
   localStorage.setItem('pixelbros_touch', on ? '1' : '0');
 }
 
@@ -79,9 +81,32 @@ const game = new Game();
 
 const unlock = () => audio.unlock();
 addEventListener('keydown', unlock);
-canvas.addEventListener('pointerdown', () => {
+
+// Canvas gestures -> the same edge-triggered Input codes as the keyboard.
+// tap: a registered menu hot spot's code, else Enter (the classic
+// click-to-confirm behavior). Horizontal swipe: Left/Right on carousel
+// screens (select, map). Hot spots are registered by the screens when they
+// draw, so hit areas always match the art.
+function toCanvas(e) {
+  const r = canvas.getBoundingClientRect();
+  return {
+    x: ((e.clientX - r.left) / r.width) * VIEW_W,
+    y: ((e.clientY - r.top) / r.height) * VIEW_H,
+  };
+}
+const SWIPE_STATES = new Set(['select', 'map']);
+canvas.addEventListener('pointerdown', (e) => {
   unlock();
-  Input.touchConfirm();
+  const p = toCanvas(e);
+  TouchUI.pointerDown(p.x, p.y);
+});
+canvas.addEventListener('pointerup', (e) => {
+  const p = toCanvas(e);
+  const g = TouchUI.pointerUp(p.x, p.y);
+  if (g.type === 'tap') Input.tap(TouchUI.hitTest(g.x, g.y) || 'Enter');
+  else if (SWIPE_STATES.has(game.state)) {
+    Input.tap(g.type === 'swipeL' ? 'ArrowLeft' : 'ArrowRight');
+  }
 });
 
 const STEP = 1000 / 60;
@@ -105,3 +130,9 @@ function loop(now) {
   Input.endFrame();
 }
 requestAnimationFrame(loop);
+
+// PWA: offline-capable once installed. Skipped on localhost so the SW can
+// never fight the no-store dev server (see AGENTS.md cache warning).
+if ('serviceWorker' in navigator && !['localhost', '127.0.0.1'].includes(location.hostname)) {
+  addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+}

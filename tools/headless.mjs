@@ -37,6 +37,7 @@ const base = '../js';
 const Game = (await import(`${base}/game.js`)).default;
 const i18n = await import(`${base}/i18n.js`);
 const Input = (await import(`${base}/input.js`)).default;
+const TouchUI = (await import(`${base}/touchui.js`)).default;
 const { CHARACTERS } = await import(`${base}/entities.js`);
 const { LEVEL_COUNT } = await import(`${base}/levels.js`);
 
@@ -75,6 +76,74 @@ function tap(g, code) {
   tap(g, 'KeyQ');
   if (g.state !== 'title') throw new Error('Q on map should quit to title');
   console.log('adventure-map flow OK');
+}
+
+// touch UI: hot spots, node taps, pause/game-over cards, gestures
+{
+  TouchUI.setMode(true);
+  const hit = (x, y) => TouchUI.hitTest(x, y);
+  const g = new Game();
+
+  // title: option bar (392,4) — mute / night / lang icons
+  g.render(ctx);
+  if (hit(404, 16) !== 'KeyM' || hit(432, 16) !== 'KeyN' || hit(460, 16) !== 'KeyL')
+    throw new Error('title option bar hot spots missing');
+  const wasMuted = g.muted;
+  tap(g, 'KeyM');
+  if (g.muted === wasMuted) throw new Error('mute tap did not toggle');
+  tap(g, 'KeyM');
+
+  // select: arrows + center card reachable by tap
+  g.state = 'select';
+  g.render(ctx);
+  if (hit(20, 132) !== 'ArrowLeft' || hit(460, 132) !== 'ArrowRight')
+    throw new Error('select arrows not tappable');
+  if (hit(240, 130) !== 'Enter') throw new Error('center card not tappable');
+  const sel0 = g.selIdx;
+  tap(g, 'ArrowLeft');
+  if (g.selIdx === sel0) throw new Error('touch carousel broken');
+
+  // map: node taps ('Node<i>' codes), locked nodes guarded by game
+  g.startRun();
+  g.render(ctx);
+  if (hit(52, 198) !== 'Node0' || hit(414, 82) !== 'Node4')
+    throw new Error('map nodes not tappable');
+  tap(g, 'Node4'); // beyond frontier: must be ignored
+  if (g.state !== 'map' || g.cursor !== 0) throw new Error('locked node tap leaked');
+  tap(g, 'Node0'); // selected node again -> launch
+  if (g.state !== 'play') throw new Error('tapping selected node should start stage');
+
+  // pause: three cards + centered option bar
+  g.state = 'pause';
+  g.render(ctx);
+  if (hit(110, 122) !== 'Escape' || hit(240, 122) !== 'KeyR' || hit(360, 122) !== 'KeyQ')
+    throw new Error('pause cards not tappable');
+  if (hit(212, 170) !== 'KeyM' || hit(240, 170) !== 'KeyN' || hit(268, 170) !== 'KeyL')
+    throw new Error('pause option bar not tappable');
+  tap(g, 'KeyR'); // retry card resumes and dies (same as R key)
+  if (g.state !== 'play') throw new Error('retry card should return to play');
+
+  // game over: retry / title cards
+  g.state = 'gameover';
+  g.render(ctx);
+  if (hit(160, 186) !== 'Enter' || hit(300, 186) !== 'Escape')
+    throw new Error('game over cards not tappable');
+
+  // gesture recognizer: tap vs swipe
+  TouchUI.pointerDown(240, 140);
+  let gest = TouchUI.pointerUp(245, 144);
+  if (gest.type !== 'tap' || gest.x !== 245) throw new Error('small drag should be a tap');
+  TouchUI.pointerDown(400, 140);
+  gest = TouchUI.pointerUp(120, 148);
+  if (gest.type !== 'swipeL') throw new Error('swipe left not recognized');
+  TouchUI.pointerDown(100, 140);
+  gest = TouchUI.pointerUp(380, 136);
+  if (gest.type !== 'swipeR') throw new Error('swipe right not recognized');
+  TouchUI.pointerDown(240, 60);
+  gest = TouchUI.pointerUp(252, 180);
+  if (gest.type !== 'none') throw new Error('vertical drag must not swipe');
+  TouchUI.setMode(false);
+  console.log('touch UI (hot spots, cards, gestures) OK');
 }
 
 for (const lang of ['en', 'ar']) {
